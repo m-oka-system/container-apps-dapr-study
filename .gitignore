@@ -26,3 +26,6 @@ Thumbs.db
 
 # Documentation
 docs/
+
+# SpecStory explanation file
+.specstory/**
