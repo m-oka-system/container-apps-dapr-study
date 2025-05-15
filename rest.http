@@ -1,0 +1,42 @@
+POST http://localhost:50000/v1.0/invoke/product-api/method/products
+Content-Type: application/json
+
+{
+    "name": "みかん",
+    "price": 80
+}
+
+###
+GET http://localhost:50000/v1.0/invoke/product-api/method/products
+
+###
+GET http://localhost:50000/v1.0/invoke/product-api/method/products/7eb5ddbd-f3a2-4b61-b4b7-5196e2ac725a
+# GET http://localhost:50000/v1.0/state/product-store/73bc51e8-9581-49d2-9ba5-4fc95f537b88
+
+###
+DELETE http://localhost:50000/v1.0/invoke/product-api/method/products/7eb5ddbd-f3a2-4b61-b4b7-5196e2ac725a
+# DELETE http://localhost:50000/v1.0/state/product-store/412fa5d4-a384-41fa-b7eb-460e619b8fe1
+
+###
+GET http://localhost:50000/v1.0/invoke/product-api/method/hello
+
+
+### Azure Container Apps Environment
+
+### Get all products from ACA
+GET {{aca_host}}/products
+
+### Get a specific product from ACA
+GET {{aca_host}}/products/7eb5ddbd-f3a2-4b61-b4b7-5196e2ac725a
+
+### Delete a specific product from ACA
+DELETE {{aca_host}}/products/7eb5ddbd-f3a2-4b61-b4b7-5196e2ac725a
+
+### Create a new product in ACA
+POST {{aca_host}}/products
+Content-Type: application/json
+
+{
+    "name": "りんご (ACA)",
+    "price": 150
+}
