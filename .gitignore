@@ -1,0 +1,28 @@
+# Python - Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python - Bytecode
+__pycache__/
+*.py[cod]
+
+# Environment variables
+*.env
+
+# Dapr - Local Secrets
+api/components/secrets.json
+
+# Flask - Instance folder (optional, but common)
+instance/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE - VSCode specific (optional)
+.vscode/
+
+# Documentation
+docs/

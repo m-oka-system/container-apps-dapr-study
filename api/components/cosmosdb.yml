@@ -1,0 +1,26 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: product-store # ここで指定した名前をコード内の STATE_STORE_NAME と合わせる
+spec:
+  type: state.azure.cosmosdb
+  version: v1
+  metadata:
+  - name: url
+    secretKeyRef:
+      name: azureCosmosDB
+      key: url
+  - name: masterKey
+    secretKeyRef:
+      name: azureCosmosDB
+      key: masterKey
+  - name: database
+    secretKeyRef:
+      name: azureCosmosDB
+      key: database
+  - name: collection
+    secretKeyRef:
+      name: azureCosmosDB
+      key: collection
+auth:
+  secretStore: "local-secret-store"
