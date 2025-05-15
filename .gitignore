@@ -9,7 +9,7 @@ __pycache__/
 *.py[cod]
 
 # Environment variables
-*.env
+*.env*
 
 # Dapr - Local Secrets
 api/components/secrets.json
