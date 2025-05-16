@@ -14,7 +14,7 @@ COPY requirements.txt .
 # Install build tools, then pip requirements, then remove build tools to keep the image slim.
 # build-essential includes C/C++ compilers like gcc.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  build-essential \
+  build-essential curl \
   && python -m pip install --no-cache-dir -r requirements.txt \
   && apt-get purge -y --auto-remove build-essential \
   && rm -rf /var/lib/apt/lists/*
