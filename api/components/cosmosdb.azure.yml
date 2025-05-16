@@ -1,0 +1,12 @@
+componentType: state.azure.cosmosdb
+version: v1
+metadata:
+  - name: url
+    value: "https://cosmos-app-terraform-dev.documents.azure.com:443/"
+  - name: database
+    value: "database1"
+  - name: collection
+    value: "container1"
+  - name: masterKey
+    secretRef: COSMOSDB-PRIMARY-KEY
+secretStoreComponent: secret-store
