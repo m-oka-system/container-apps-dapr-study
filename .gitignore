@@ -12,7 +12,7 @@ __pycache__/
 *.env*
 
 # Dapr - Local Secrets
-api/components/secrets.json
+secrets.json
 
 # Flask - Instance folder (optional, but common)
 instance/
