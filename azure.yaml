@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: container-apps-dapr-study
+infra:
+  provider: terraform
+services:
+    backend:
+        project: src/backend
+        host: containerapp
+        language: python
+        docker:
+            path: Dockerfile
+            remoteBuild: true
+    frontend:
+        project: src/frontend
+        host: containerapp
+        language: ts
+        docker:
+            path: Dockerfile
+            remoteBuild: true

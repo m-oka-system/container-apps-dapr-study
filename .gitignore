@@ -29,3 +29,6 @@ docs/
 
 # SpecStory explanation file
 .specstory/**
+
+# Azure Developer CLI
+.azure
