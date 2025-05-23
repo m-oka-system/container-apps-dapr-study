@@ -366,6 +366,14 @@ resource "azurerm_container_app" "ca" {
       image  = "mcr.microsoft.com/k8se/quickstart:latest"
       cpu    = each.value.template.container.cpu
       memory = each.value.template.container.memory
+
+      dynamic "env" {
+        for_each = lookup(local.container_app_env, each.key, {})
+        content {
+          name  = env.key
+          value = env.value
+        }
+      }
     }
 
     http_scale_rule {
