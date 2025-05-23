@@ -13,6 +13,11 @@ app.config['JSON_AS_ASCII'] = False
 # STATE_STORE_NAME = "blob-store"
 STATE_STORE_NAME = "product-store"
 
+# GET /healthz - ヘルスチェックエンドポイント
+@app.route('/healthz', methods=['GET'])
+def healthz():
+    return jsonify({"status": "ok"}), 200
+
 @app.route('/hello', methods=['GET'])
 def hello_world():
     print("---- /hello endpoint CALLED ----", flush=True)

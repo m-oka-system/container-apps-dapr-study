@@ -45,3 +45,10 @@ Content-Type: application/json
 ### Get products list and CosmosDB primary key from secret store in Container Apps Console.
 curl http://localhost:${DAPR_HTTP_PORT}/v1.0/invoke/product-api/method/products
 curl http://localhost:${DAPR_HTTP_PORT}/v1.0/secrets/secret-store/COSMOSDB-PRIMARY-KEY
+
+
+### Health Check
+GET http://localhost:3000/healthz
+
+###
+GET http://localhost:5002/healthz
