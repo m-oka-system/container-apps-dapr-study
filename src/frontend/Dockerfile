@@ -19,6 +19,8 @@ ENV NEXT_TELEMETRY_DISABLED 1
 ENV HOST=0.0.0.0
 WORKDIR /usr/src/app
 
+RUN apk add --no-cache curl bind-tools
+
 RUN addgroup -g 1001 -S nodejs && \
   adduser -S nextjs -u 1001 -G nodejs
 
