@@ -73,8 +73,7 @@ locals {
   # コンテナアプリの環境変数
   container_app_env = {
     frontend = {
-      # URL構造: https://{container-app-name}.{environment-default-domain}
-      API_BASE_URL = "https://ca-backend.${azurerm_container_app_environment.cae.default_domain}"
+      API_BASE_URL = "http://ca-backend"
     }
     backend = {
     }
