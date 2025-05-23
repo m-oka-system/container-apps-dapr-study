@@ -1,0 +1,31 @@
+# Terraform ファイル
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+.terraform.lock.hcl
+
+# 変数ファイル
+*.tfvars
+*.tfvars.json
+!main.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI設定ファイル
+.terraformrc
+terraform.rc
+
+# ログファイル
+*.log
+
+# 環境変数
+.env
+.env.*
+
+# バックアップファイル
+*.backup
+*.bak
