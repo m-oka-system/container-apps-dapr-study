@@ -26,9 +26,6 @@ import { ProductForm } from "@/components/products/ProductForm";
 import { useToast } from "@/hooks/use-toast";
 import * as z from "zod";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-const API_PRODUCTS_PATH = process.env.NEXT_PUBLIC_API_PRODUCTS_PATH || 'products';
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = z.object({
   name: z.string().min(1, { message: "商品名は必須です。" }),
@@ -55,10 +52,11 @@ export default function ProductsPage() {
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Next.js の API Route 経由で商品一覧を取得
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/${API_PRODUCTS_PATH}`);
+      const response = await fetch('/api/products');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -68,7 +66,11 @@ export default function ProductsPage() {
       const errorMessage = e instanceof Error ? e.message : "不明なエラーが発生しました";
       setError(errorMessage);
       if (toast) {
-        toast({ title: "エラー", description: `商品の取得に失敗しました: ${errorMessage}`, variant: "destructive" });
+        toast({
+          title: "エラー",
+          description: `商品の取得に失敗しました: ${errorMessage}`,
+          variant: "destructive"
+        });
       }
       console.error("Failed to fetch products:", e);
     } finally {
@@ -95,20 +97,21 @@ export default function ProductsPage() {
     setIsAlertOpen(true);
   };
 
+  // Next.js の API Route 経由で商品を削除
   const confirmDelete = async () => {
     if (!deletingProductId) return;
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/${API_PRODUCTS_PATH}/${deletingProductId}`, {
+      const response = await fetch(`/api/products/${deletingProductId}`, {
         method: "DELETE",
       });
 
       if (!response.ok) {
-        if (response.status === 204) {
-        } else {
-            const errorData = await response.json().catch(() => ({ error: "不明なサーバーエラー" }));
-            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        if (response.status === 404) {
+          throw new Error("商品が見つかりません");
         }
+        const errorData = await response.json().catch(() => ({ error: "不明なサーバーエラー" }));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       if (toast) {
@@ -135,6 +138,7 @@ export default function ProductsPage() {
     }
   };
 
+  // Next.jsのAPI Route経由で商品を作成/更新
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     let url: string;
@@ -143,11 +147,11 @@ export default function ProductsPage() {
 
     if (editingProduct) {
       method = "PUT";
-      url = `${API_BASE_URL}/${API_PRODUCTS_PATH}/${editingProduct.id}`;
+      url = `/api/products/${editingProduct.id}`;
       payload = { id: editingProduct.id, name: values.name, price: values.price };
     } else {
       method = "POST";
-      url = `${API_BASE_URL}/${API_PRODUCTS_PATH}`;
+      url = "/api/products";
       payload = { name: values.name, price: values.price };
     }
 
@@ -159,28 +163,24 @@ export default function ProductsPage() {
       });
 
       if (!response.ok) {
-        if (editingProduct && (response.status === 404 || response.status === 405)) {
-          if (toast) {
-            toast({
-              title: "APIエラー (編集不可)",
-              description: `商品の更新に失敗しました。APIが編集処理（PUT ${url}）をサポートしていない可能性があります。 (ステータス: ${response.status})`,
-              variant: "destructive",
-            });
-          }
-        } else {
-          const errorData = await response.json().catch(() => ({ error: "不明なサーバーエラー" }));
-          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        if (response.status === 404) {
+          throw new Error("商品が見つかりません");
         }
-      } else {
-        if (toast) {
-          toast({
-            title: editingProduct ? "更新成功" : "登録成功",
-            description: `商品「${values.name}」が${editingProduct ? "更新" : "登録"}されました。`,
-          });
+        if (response.status === 405) {
+          throw new Error("APIが編集処理をサポートしていません");
         }
-        setIsDialogOpen(false);
-        fetchProducts();
+        const errorData = await response.json().catch(() => ({ error: "不明なサーバーエラー" }));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
+
+      if (toast) {
+        toast({
+          title: editingProduct ? "更新成功" : "登録成功",
+          description: `商品「${values.name}」が${editingProduct ? "更新" : "登録"}されました。`,
+        });
+      }
+      setIsDialogOpen(false);
+      fetchProducts();
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : "不明なエラーが発生しました";
       if (toast) {
