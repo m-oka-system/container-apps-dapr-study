@@ -545,7 +545,7 @@ variable "container_app" {
         }
       }
       ingress = {
-        external_enabled           = true
+        external_enabled           = false
         allow_insecure_connections = false
         client_certificate_mode    = "ignore"
         transport                  = "auto"
