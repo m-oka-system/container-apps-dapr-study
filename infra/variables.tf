@@ -467,6 +467,15 @@ variable "container_app" {
         name   = string
         cpu    = number
         memory = string
+        liveness_probe = object({
+          transport               = string
+          path                    = string
+          port                    = number
+          initial_delay           = number
+          interval_seconds        = number
+          timeout                 = number
+          failure_count_threshold = number
+        })
       })
       http_scale_rule = object({
         name                = string
@@ -505,6 +514,15 @@ variable "container_app" {
           name   = "frontend"
           cpu    = 0.25
           memory = "0.5Gi"
+          liveness_probe = {
+            transport               = "HTTP"
+            path                    = "/healthz"
+            port                    = 3000
+            initial_delay           = 1
+            interval_seconds        = 10
+            timeout                 = 1
+            failure_count_threshold = 3
+          }
         }
         http_scale_rule = {
           name                = "http-scale"
@@ -538,6 +556,15 @@ variable "container_app" {
           name   = "backend"
           cpu    = 0.25
           memory = "0.5Gi"
+          liveness_probe = {
+            transport               = "HTTP"
+            path                    = "/healthz"
+            port                    = 5002
+            initial_delay           = 1
+            interval_seconds        = 10
+            timeout                 = 1
+            failure_count_threshold = 3
+          }
         }
         http_scale_rule = {
           name                = "http-scale"

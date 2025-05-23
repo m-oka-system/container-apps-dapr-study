@@ -367,6 +367,16 @@ resource "azurerm_container_app" "ca" {
       cpu    = each.value.template.container.cpu
       memory = each.value.template.container.memory
 
+      liveness_probe {
+        transport               = each.value.template.container.liveness_probe.transport
+        path                    = each.value.template.container.liveness_probe.path
+        port                    = each.value.template.container.liveness_probe.port
+        initial_delay           = each.value.template.container.liveness_probe.initial_delay
+        interval_seconds        = each.value.template.container.liveness_probe.interval_seconds
+        timeout                 = each.value.template.container.liveness_probe.timeout
+        failure_count_threshold = each.value.template.container.liveness_probe.failure_count_threshold
+      }
+
       dynamic "env" {
         for_each = lookup(local.container_app_env, each.key, {})
         content {
