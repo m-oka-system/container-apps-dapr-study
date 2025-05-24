@@ -120,6 +120,9 @@ jobs:
                   --name ${{ secrets.KEY_VAULT_NAME }} \
                   --ip-address {}
 
+            echo "${{ secrets.ALLOWED_CIDR }}"
+            echo "${{ vars.ALLOWED_CIDR }}"
+
             # 許可すべき IP アドレスを追加
             echo "${{ secrets.ALLOWED_CIDR }}" \
               | jq -r '.[]' \
