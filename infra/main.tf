@@ -107,6 +107,11 @@ resource "azurerm_key_vault" "kv" {
     virtual_network_subnet_ids = var.key_vault.network_acls.virtual_network_subnet_ids
   }
 
+  # GitHub Actions のランナーの IP アドレスを KeyVault のファイアウォールに追加するため IP アドレスの変更を無視する
+  lifecycle {
+    ignore_changes = [network_acls[0].ip_rules]
+  }
+
   tags = local.tags
 }
 
