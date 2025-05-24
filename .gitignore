@@ -14,6 +14,10 @@ __pycache__/
 # Dapr - Local Secrets
 secrets.json
 
+# GitHub Actions
+.secrets
+.credential.json
+
 # Flask - Instance folder (optional, but common)
 instance/
 
