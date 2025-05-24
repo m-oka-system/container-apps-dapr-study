@@ -17,11 +17,21 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
       AZURE_LOCATION: ${{ vars.AZURE_LOCATION || 'japaneast' }}
+      TF_VERSION: ${{ vars.TF_VERSION || '~>1.11' }}
+      TF_VAR_allowed_cidr: ${{ secrets.ALLOWED_CIDR }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
       - name: Install azd
         uses: Azure/setup-azd@v2
+
       - name: Log in with Azure (Federated Credentials)
         run: |
           azd auth login `
