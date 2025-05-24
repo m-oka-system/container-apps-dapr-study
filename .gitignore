@@ -17,6 +17,7 @@ secrets.json
 # GitHub Actions
 .secrets
 .credential.json
+act.yml
 
 # Flask - Instance folder (optional, but common)
 instance/
