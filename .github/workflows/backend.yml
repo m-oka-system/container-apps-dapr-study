@@ -1,4 +1,4 @@
-name: Deploy Frontend Application with Azd
+name: Deploy Backend Application with Azd
 
 on:
   workflow_dispatch:
