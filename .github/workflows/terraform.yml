@@ -1,11 +1,19 @@
+name: Provision Infrastructure with Terraform
+
 on:
   workflow_dispatch:
   push:
     branches:
       - main
+    paths:
+      - "infra/**"
+      - ".github/workflows/terraform.yml"
   pull_request:
     branches:
       - main
+    paths:
+      - "infra/**"
+      - ".github/workflows/terraform.yml"
 
 permissions:
   id-token: write

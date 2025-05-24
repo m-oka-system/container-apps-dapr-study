@@ -1,4 +1,4 @@
-name: Provision Infrastructure
+name: Provision Infrastructure with Azd
 
 on:
   workflow_dispatch:
@@ -16,6 +16,8 @@ permissions:
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    environment:
+      name: dev
     env:
       AZCLI_VERSION: ${{ vars.AZCLI_VERSION || '2.72.0' }}
       TF_VERSION: ${{ vars.TF_VERSION || '1.11.2' }}
