@@ -1,6 +1,12 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
 name: container-apps-dapr-study
+state:
+  remote:
+    backend: AzureBlobStorage
+    config:
+      accountName: stterraformstate84503
+      containerName: azd-config
 infra:
   provider: terraform
 services:
