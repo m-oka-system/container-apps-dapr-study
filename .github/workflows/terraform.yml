@@ -111,22 +111,6 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLI_VERSION }}
           inlineScript: |
-            # 既存の IP アドレスをすべて削除
-            az keyvault network-rule list \
+            az keyvault network-rule remove \
               --name ${{ secrets.KEY_VAULT_NAME }} \
-              --query "ipRules[].value" -o tsv \
-              | tr -d '\r' \
-              | xargs -I{} az keyvault network-rule remove \
-                  --name ${{ secrets.KEY_VAULT_NAME }} \
-                  --ip-address {}
-
-            echo "${{ secrets.ALLOWED_CIDR }}"
-            echo "${{ vars.ALLOWED_CIDR }}"
-
-            # 許可すべき IP アドレスを追加
-            echo "${{ secrets.ALLOWED_CIDR }}" \
-              | jq -r '.[]' \
-              | tr -d '\r' \
-              | xargs -I{} az keyvault network-rule add \
-                  --name ${{ secrets.KEY_VAULT_NAME }} \
-                  --ip-address {}
+              --ip-address ${{ steps.runner-ip.outputs.ipv4 }}
