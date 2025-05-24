@@ -19,6 +19,8 @@ env:
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    environment:
+      name: dev
     defaults:
       run:
         working-directory: ./infra
