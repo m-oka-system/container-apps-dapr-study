@@ -57,7 +57,9 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLI_VERSION }}
           inlineScript: |
-            az keyvault network-rule add --name ${{ secrets.KEY_VAULT_NAME }} --ip-address ${{ steps.runner-ip.outputs.ipv4 }}
+            az keyvault network-rule add \
+              --name ${{ secrets.KEY_VAULT_NAME }} \
+              --ip-address ${{ steps.runner-ip.outputs.ipv4 }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -109,4 +111,19 @@ jobs:
         with:
           azcliversion: ${{ env.AZCLI_VERSION }}
           inlineScript: |
-            az keyvault network-rule remove --name ${{ secrets.KEY_VAULT_NAME }} --ip-address ${{ steps.runner-ip.outputs.ipv4 }}
+            # 既存の IP アドレスをすべて削除
+            az keyvault network-rule list \
+              --name ${{ secrets.KEY_VAULT_NAME }} \
+              --query "ipRules[].value" -o tsv \
+              | tr -d '\r' \
+              | xargs -I{} az keyvault network-rule remove \
+                  --name ${{ secrets.KEY_VAULT_NAME }} \
+                  --ip-address {}
+
+            # 許可すべき IP アドレスを追加
+            echo "${{ secrets.ALLOWED_CIDR }}" \
+              | jq -r '.[]' \
+              | tr -d '\r' \
+              | xargs -I{} az keyvault network-rule add \
+                  --name ${{ secrets.KEY_VAULT_NAME }} \
+                  --ip-address {}
