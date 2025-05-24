@@ -109,7 +109,7 @@ resource "azurerm_key_vault" "kv" {
 
   # GitHub Actions のランナーの IP アドレスを KeyVault のファイアウォールに追加するため IP アドレスの変更を無視する
   lifecycle {
-    ignore_changes = [network_acls.ip_rules]
+    ignore_changes = [network_acls[0].ip_rules]
   }
 
   tags = local.tags
