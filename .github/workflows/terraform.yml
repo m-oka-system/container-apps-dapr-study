@@ -45,7 +45,7 @@ jobs:
       - name: Check if KeyVault exists
         id: check_if_keyvault_exists
         continue-on-error: true
-        uses: azure/CLI@v2
+        uses: azure/cli@v2
         with:
           azcliversion: ${{ env.AZCLI_VERSION }}
           inlineScript: |
@@ -53,7 +53,7 @@ jobs:
 
       - name: Add runner's Public IP to KeyVault Firewall
         if: steps.check_if_keyvault_exists.outcome == 'success'
-        uses: azure/CLI@v2
+        uses: azure/cli@v2
         with:
           azcliversion: ${{ env.AZCLI_VERSION }}
           inlineScript: |
@@ -105,7 +105,7 @@ jobs:
 
       - name: Remove runner's Public IP from KeyVault Firewall
         if: steps.check_if_keyvault_exists.outcome == 'success'
-        uses: azure/CLI@v2
+        uses: azure/cli@v2
         with:
           azcliversion: ${{ env.AZCLI_VERSION }}
           inlineScript: |
