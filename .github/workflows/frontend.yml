@@ -20,7 +20,7 @@ permissions:
   contents: read
 
 jobs:
-  terraform:
+  deploy:
     runs-on: ubuntu-latest
     environment:
       name: dev
