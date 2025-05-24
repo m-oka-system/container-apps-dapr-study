@@ -12,8 +12,8 @@ permissions:
   contents: read
 
 env:
-  AZCLI_VERSION: ${{ vars.AZCLI_VERSION || '~>2.72' }}
-  TF_VERSION: ${{ vars.TF_VERSION || '~>1.11' }}
+  AZCLI_VERSION: ${{ vars.AZCLI_VERSION || '2.72.0' }}
+  TF_VERSION: ${{ vars.TF_VERSION || '1.11.2' }}
   TF_VAR_environment_name: ${{ vars.AZURE_ENV_NAME }}
   TF_VAR_location: ${{ vars.AZURE_LOCATION || 'japaneast' }}
   TF_VAR_allowed_cidr: ${{ secrets.ALLOWED_CIDR }}
