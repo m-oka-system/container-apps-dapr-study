@@ -2,6 +2,7 @@ from flask import Flask, Response, request, jsonify
 from flask_cors import CORS
 import json
 import uuid
+import os
 from dapr.clients import DaprClient
 import traceback
 
@@ -143,4 +144,5 @@ def update_product(product_id):
         return Response(json.dumps({"error": f"Failed to update product {product_id}"}, ensure_ascii=False), mimetype='application/json; charset=utf-8', status=500)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5002)
+    debug_mode = os.getenv('FLASK_ENV') == 'development'
+    app.run(debug=debug_mode, host='0.0.0.0', port=5002)
