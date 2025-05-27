@@ -119,6 +119,7 @@ resource "azurerm_key_vault_secret" "COSMOSDB_PRIMARY_KEY" {
   name         = replace("COSMOSDB_PRIMARY_KEY", "_", "-")
   value        = azurerm_cosmosdb_account.account.primary_key
   key_vault_id = azurerm_key_vault.kv.id
+  content_type = "text/plain"
 }
 
 # ------------------------------------------------------------------------------------------------------
