@@ -8,12 +8,6 @@ on:
     paths:
       - "src/frontend/**"
       - ".github/workflows/frontend.yml"
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "src/frontend/**"
-      - ".github/workflows/frontend.yml"
 
 permissions:
   id-token: write
