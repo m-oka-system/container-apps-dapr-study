@@ -37,3 +37,6 @@ docs/
 
 # Azure Developer CLI
 .azure
+
+# Claude Code
+.claude/
