@@ -13,6 +13,14 @@ terraform {
       source  = "azure/azapi"
       version = "~> 2.4"
     }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 3.0"
+    }
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.12"
+    }
   }
 }
 
@@ -43,4 +51,8 @@ provider "azurerm" {
 
 provider "azapi" {
   enable_preflight = true
+}
+
+provider "azuread" {
+  # Use the same tenant as azurerm
 }
