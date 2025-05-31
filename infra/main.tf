@@ -488,16 +488,12 @@ resource "azuread_application" "frontend_auth" {
       type = "Scope"
     }
   }
-
-  tags = local.tags
 }
 
 # Service Principal for the Azure AD Application
 resource "azuread_service_principal" "frontend_auth" {
   client_id                    = azuread_application.frontend_auth.client_id
   app_role_assignment_required = false
-
-  tags = local.tags
 }
 
 # Time rotation for client secret (every 150 days)
@@ -529,12 +525,6 @@ resource "azurerm_key_vault_secret" "frontend_auth_client_secret" {
   lifecycle {
     create_before_destroy = true
   }
-
-  tags = local.tags
-
-  depends_on = [
-    azurerm_key_vault_access_policy.default
-  ]
 }
 
 # Container App Authentication configuration using azapi_resource
