@@ -446,9 +446,6 @@ resource "azurerm_container_app" "ca" {
 # ------------------------------------------------------------------------------------------------------
 # Easy Auth (Azure AD Authentication for Container Apps)
 # ------------------------------------------------------------------------------------------------------
-# Data source for current Azure client configuration
-data "azurerm_client_config" "current" {}
-
 # Generate UUID for OAuth2 permission scope
 resource "random_uuid" "oauth2_permission_scope_id" {}
 
