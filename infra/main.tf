@@ -444,6 +444,128 @@ resource "azurerm_container_app" "ca" {
 }
 
 # ------------------------------------------------------------------------------------------------------
+# Easy Auth (Azure AD Authentication for Container Apps)
+# ------------------------------------------------------------------------------------------------------
+# Generate UUID for OAuth2 permission scope
+resource "random_uuid" "oauth2_permission_scope_id" {}
+
+# Azure AD Application for frontend authentication
+resource "azuread_application" "frontend_auth" {
+  display_name     = "ca-frontend"
+  sign_in_audience = "AzureADMyOrg" # Single tenant configuration
+
+  web {
+    redirect_uris = [
+      "https://${azurerm_container_app.ca["frontend"].latest_revision_fqdn}/.auth/login/aad/callback"
+    ]
+
+    implicit_grant {
+      access_token_issuance_enabled = false
+      id_token_issuance_enabled     = true # Required for OpenID Connect
+    }
+  }
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Allow the application to access the container app on behalf of the signed-in user."
+      admin_consent_display_name = "Access container app"
+      enabled                    = true
+      id                         = random_uuid.oauth2_permission_scope_id.result
+      type                       = "User"
+      user_consent_description   = "Allow the application to access the container app on your behalf."
+      user_consent_display_name  = "Access container app"
+      value                      = "user_impersonation"
+    }
+  }
+
+  identifier_uris = ["api://${random_uuid.oauth2_permission_scope_id.result}"]
+
+  required_resource_access {
+    resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
+
+    resource_access {
+      id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d" # User.Read
+      type = "Scope"
+    }
+  }
+}
+
+# Service Principal for the Azure AD Application
+resource "azuread_service_principal" "frontend_auth" {
+  client_id                    = azuread_application.frontend_auth.client_id
+  app_role_assignment_required = false
+}
+
+# Time rotation for client secret (every 150 days)
+resource "time_rotating" "client_secret_rotation" {
+  rotation_days = 150 # Rotate 30 days before expiry (180 - 30 = 150)
+}
+
+# Client secret with 6-month validity
+resource "azuread_application_password" "frontend_auth" {
+  application_id = azuread_application.frontend_auth.id
+  display_name   = "terraform-generated-secret"
+  end_date       = timeadd(timestamp(), "4320h") # 180日 (6ヶ月)
+
+  rotate_when_changed = {
+    rotation = time_rotating.client_secret_rotation.id
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Store client secret in Key Vault
+resource "azurerm_key_vault_secret" "frontend_auth_client_secret" {
+  name         = "microsoft-provider-authentication-secret"
+  value        = azuread_application_password.frontend_auth.value
+  key_vault_id = azurerm_key_vault.kv.id
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Container App Authentication configuration using azapi_resource
+resource "azapi_resource" "frontend_auth_config" {
+  type      = "Microsoft.App/containerApps/authConfigs@2023-05-01"
+  name      = "current"
+  parent_id = azurerm_container_app.ca["frontend"].id
+
+  body = jsonencode({
+    properties = {
+      platform = {
+        enabled = true
+      }
+      globalValidation = {
+        unauthenticatedClientAction = "Return401" # Portal default
+      }
+      identityProviders = {
+        azureActiveDirectory = {
+          enabled = true
+          registration = {
+            openIdIssuer            = "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/v2.0"
+            clientId                = azuread_application.frontend_auth.client_id
+            clientSecretSettingName = "microsoft-provider-authentication-secret"
+          }
+          validation = {
+            allowedAudiences = [
+              azuread_application.frontend_auth.client_id
+            ]
+          }
+        }
+      }
+    }
+  })
+
+  depends_on = [
+    azurerm_container_app.ca["frontend"],
+    azurerm_key_vault_secret.frontend_auth_client_secret
+  ]
+}
+
+# ------------------------------------------------------------------------------------------------------
 # NAT Gateway
 # ------------------------------------------------------------------------------------------------------
 resource "azurerm_public_ip" "pip" {
