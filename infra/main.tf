@@ -451,7 +451,7 @@ resource "random_uuid" "oauth2_permission_scope_id" {}
 
 # Azure AD Application for frontend authentication
 resource "azuread_application" "frontend_auth" {
-  display_name     = "ca-frontend-${var.environment_name}"
+  display_name     = "ca-frontend"
   sign_in_audience = "AzureADMyOrg" # Single tenant configuration
 
   web {
