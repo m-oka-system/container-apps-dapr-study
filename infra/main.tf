@@ -461,7 +461,7 @@ resource "azuread_application" "frontend_auth" {
     redirect_uris = [
       "https://${azurerm_container_app.ca["frontend"].latest_revision_fqdn}/.auth/login/aad/callback"
     ]
-    
+
     implicit_grant {
       access_token_issuance_enabled = false
       id_token_issuance_enabled     = true # Required for OpenID Connect
@@ -510,9 +510,9 @@ resource "time_rotating" "client_secret_rotation" {
 
 # Client secret with 6-month validity
 resource "azuread_application_password" "frontend_auth" {
-  application_id    = azuread_application.frontend_auth.id
-  display_name      = "terraform-generated-secret"
-  end_date_relative = "4320h" # 180 days
+  application_id = azuread_application.frontend_auth.id
+  display_name   = "terraform-generated-secret"
+  end_date       = timeadd(timestamp(), "4320h") # 180日 (6ヶ月)
 
   rotate_when_changed = {
     rotation = time_rotating.client_secret_rotation.id
