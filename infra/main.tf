@@ -122,6 +122,13 @@ resource "azurerm_key_vault_secret" "COSMOSDB_PRIMARY_KEY" {
   content_type = "text/plain"
 }
 
+resource "azurerm_key_vault_secret" "microsoft-provider-authentication-secret" {
+  name         = "microsoft-provider-authentication-secret"
+  value        = azuread_application_password.frontend.value
+  key_vault_id = azurerm_key_vault.kv.id
+  content_type = "text/plain"
+}
+
 # ------------------------------------------------------------------------------------------------------
 # Azure Cosmos DB
 # ------------------------------------------------------------------------------------------------------
