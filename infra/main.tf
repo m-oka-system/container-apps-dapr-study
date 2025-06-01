@@ -427,6 +427,15 @@ resource "azurerm_container_app" "ca" {
     }
   }
 
+  dynamic "secret" {
+    for_each = each.key == "frontend" ? [true] : []
+    content {
+      name                = "microsoft-provider-authentication-secret"
+      key_vault_secret_id = azurerm_key_vault_secret.microsoft-provider-authentication-secret.id
+      identity            = azurerm_user_assigned_identity.id.id
+    }
+  }
+
   dynamic "dapr" {
     for_each = each.value.dapr != null ? [true] : []
     content {
@@ -444,7 +453,6 @@ resource "azurerm_container_app" "ca" {
   lifecycle {
     ignore_changes = [
       template[0].container[0].image,
-      secret
     ]
   }
 
@@ -526,57 +534,56 @@ resource "azurerm_monitor_diagnostic_setting" "diag" {
 # Microsoft Entra ID (Azure AD) Application
 # ------------------------------------------------------------------------------------------------------
 locals {
-  frontend_app_name = azurerm_container_app.ca["frontend"].name
+  frontend_app_name = "ca-frontend"
 }
 
 resource "random_uuid" "frontend" {}
 
-resource "azuread_application" "frontend" {
-  display_name     = local.frontend_app_name
-  owners           = [data.azurerm_client_config.current.object_id]
-  identifier_uris  = ["api://ca-frontend"]
-  sign_in_audience = "AzureADMyOrg" # 所属する単一テナント
+resource "azuread_application_registration" "frontend" {
+  display_name                           = local.frontend_app_name
+  sign_in_audience                       = "AzureADMyOrg" # 所属する単一テナント
+  implicit_access_token_issuance_enabled = false
+  implicit_id_token_issuance_enabled     = true # ID トークンの発行を有効化
+}
 
-  api {
-    requested_access_token_version = 2
+resource "azuread_application_owner" "frontend" {
+  application_id  = azuread_application_registration.frontend.id
+  owner_object_id = data.azurerm_client_config.current.object_id
+}
 
-    oauth2_permission_scope {
-      admin_consent_description  = "Allow the application to access ${local.frontend_app_name} on behalf of the signed-in user."
-      admin_consent_display_name = "Access ${local.frontend_app_name}"
-      enabled                    = true
-      id                         = random_uuid.frontend.result
-      type                       = "User"
-      user_consent_description   = "Allow the application to access ${local.frontend_app_name} on your behalf."
-      user_consent_display_name  = "Access ${local.frontend_app_name}"
-      value                      = "user_impersonation"
-    }
-  }
+resource "azuread_application_identifier_uri" "frontend" {
+  application_id = azuread_application_registration.frontend.id
+  identifier_uri = "api://ca-frontend"
+}
 
-  web {
-    redirect_uris = [
-      "https://${azurerm_container_app.ca["frontend"].ingress[0].fqdn}/.auth/login/aad/callback"
-    ]
+resource "azuread_application_permission_scope" "frontend" {
+  application_id             = azuread_application_registration.frontend.id
+  scope_id                   = random_uuid.frontend.result
+  admin_consent_description  = "Allow the application to access ${local.frontend_app_name} on behalf of the signed-in user."
+  admin_consent_display_name = "Access ${local.frontend_app_name}"
+  type                       = "User"
+  user_consent_description   = "Allow the application to access ${local.frontend_app_name} on your behalf."
+  user_consent_display_name  = "Access ${local.frontend_app_name}"
+  value                      = "user_impersonation"
+}
 
-    implicit_grant {
-      access_token_issuance_enabled = false
-      id_token_issuance_enabled     = true
-    }
-  }
 
-  required_resource_access {
-    resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
+resource "azuread_application_redirect_uris" "frontend" {
+  application_id = azuread_application_registration.frontend.id
+  type           = "Web"
+  redirect_uris = [
+    "https://${azurerm_container_app.ca["frontend"].ingress[0].fqdn}/.auth/login/aad/callback"
+  ]
+}
 
-    resource_access {
-      id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d" # User.Read
-      type = "Scope"
-    }
-  }
+# Microsoft Graph API access
+resource "azuread_application_api_access" "frontend_msgraph" {
+  application_id = azuread_application_registration.frontend.id
+  api_client_id  = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
 
-  lifecycle {
-    ignore_changes = [
-      owners
-    ]
-  }
+  scope_ids = [
+    "e1fe6dd8-ba31-4d61-89e7-88639da4683d" # User.Read
+  ]
 }
 
 resource "time_rotating" "frontend" {
@@ -585,7 +592,7 @@ resource "time_rotating" "frontend" {
 
 resource "azuread_application_password" "frontend" {
   display_name   = "easy-auth-secret"
-  application_id = azuread_application.frontend.id
+  application_id = azuread_application_registration.frontend.id
   end_date       = timeadd(time_rotating.frontend.id, "4320h") # 180日 (6ヶ月)
 
   rotate_when_changed = {
@@ -624,17 +631,17 @@ resource "azapi_resource" "frontend" {
         azureActiveDirectory = {
           enabled = true
           registration = {
-            clientId                = azuread_application.frontend.client_id
+            clientId                = azuread_application_registration.frontend.client_id
             clientSecretSettingName = "microsoft-provider-authentication-secret"
             openIdIssuer            = "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/v2.0"
           }
           validation = {
             allowedAudiences = [
-              one(azuread_application.frontend.identifier_uris)
+              azuread_application_identifier_uri.frontend.identifier_uri
             ]
             defaultAuthorizationPolicy = {
               allowedApplications = [
-                azuread_application.frontend.client_id
+                azuread_application_registration.frontend.client_id
               ]
               allowedPrincipals = {}
             }
@@ -643,35 +650,4 @@ resource "azapi_resource" "frontend" {
       }
     }
   }
-
-  depends_on = [
-    azapi_update_resource.frontend_secret
-  ]
-}
-
-# ------------------------------------------------------------------------------------------------------
-# Container App Secret (循環参照を避けるために別リソースとして定義)
-# ------------------------------------------------------------------------------------------------------
-resource "azapi_update_resource" "frontend_secret" {
-  type        = "Microsoft.App/containerApps@2025-02-02-preview"
-  resource_id = azurerm_container_app.ca["frontend"].id
-
-  body = {
-    properties = {
-      configuration = {
-        secrets = [
-          {
-            name        = "microsoft-provider-authentication-secret"
-            keyVaultUrl = azurerm_key_vault_secret.microsoft-provider-authentication-secret.versionless_id
-            identity    = azurerm_user_assigned_identity.id.id
-          }
-        ]
-      }
-    }
-  }
-
-  depends_on = [
-    azurerm_container_app.ca["frontend"],
-    azuread_application_password.frontend
-  ]
 }
