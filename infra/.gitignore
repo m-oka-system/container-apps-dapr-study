@@ -29,3 +29,6 @@ terraform.rc
 # バックアップファイル
 *.backup
 *.bak
+
+# TFLint 設定ファイル
+.tflint.hcl
