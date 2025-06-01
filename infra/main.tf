@@ -444,6 +444,7 @@ resource "azurerm_container_app" "ca" {
   lifecycle {
     ignore_changes = [
       template[0].container[0].image,
+      secret
     ]
   }
 
@@ -645,5 +646,32 @@ resource "azapi_resource" "frontend" {
 
   depends_on = [
     azapi_update_resource.frontend_secret
+  ]
+}
+
+# ------------------------------------------------------------------------------------------------------
+# Container App Secret (循環参照を避けるために別リソースとして定義)
+# ------------------------------------------------------------------------------------------------------
+resource "azapi_update_resource" "frontend_secret" {
+  type        = "Microsoft.App/containerApps@2025-02-02-preview"
+  resource_id = azurerm_container_app.ca["frontend"].id
+
+  body = {
+    properties = {
+      configuration = {
+        secrets = [
+          {
+            name        = "microsoft-provider-authentication-secret"
+            keyVaultUrl = azurerm_key_vault_secret.microsoft-provider-authentication-secret.versionless_id
+            identity    = azurerm_user_assigned_identity.id.id
+          }
+        ]
+      }
+    }
+  }
+
+  depends_on = [
+    azurerm_container_app.ca["frontend"],
+    azuread_application_password.frontend
   ]
 }
