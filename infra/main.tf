@@ -595,3 +595,55 @@ resource "azuread_application_password" "frontend" {
     create_before_destroy = true
   }
 }
+
+# ------------------------------------------------------------------------------------------------------
+# Container App Authentication
+# ------------------------------------------------------------------------------------------------------
+# azurerm_container_app では認証設定をサポートしていないので azapi プロバイダーを使う
+resource "azapi_resource" "frontend" {
+  type      = "Microsoft.App/containerApps/authConfigs@2025-02-02-preview"
+  name      = "current"
+  parent_id = azurerm_container_app.ca["frontend"].id
+
+  body = {
+    properties = {
+      platform = {
+        enabled = true
+      }
+      globalValidation = {
+        redirectToProvider          = "azureactivedirectory"
+        unauthenticatedClientAction = "RedirectToLoginPage"
+      }
+      httpSettings = {
+        forwardProxy = {
+          convention = "NoProxy"
+        }
+      }
+      identityProviders = {
+        azureActiveDirectory = {
+          enabled = true
+          registration = {
+            clientId                = azuread_application.frontend.client_id
+            clientSecretSettingName = "microsoft-provider-authentication-secret"
+            openIdIssuer            = "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/v2.0"
+          }
+          validation = {
+            allowedAudiences = [
+              one(azuread_application.frontend.identifier_uris)
+            ]
+            defaultAuthorizationPolicy = {
+              allowedApplications = [
+                azuread_application.frontend.client_id
+              ]
+              allowedPrincipals = {}
+            }
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    azapi_update_resource.frontend_secret
+  ]
+}
