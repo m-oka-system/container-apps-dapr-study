@@ -546,7 +546,7 @@ resource "azuread_application" "frontend" {
 
   web {
     redirect_uris = [
-      "https://${azurerm_container_app.ca["frontend"].latest_revision_fqdn}/.auth/login/aad/callback"
+      "https://${azurerm_container_app.ca["frontend"].ingress[0].fqdn}/.auth/login/aad/callback"
     ]
 
     implicit_grant {
