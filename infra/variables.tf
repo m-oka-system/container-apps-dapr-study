@@ -432,9 +432,10 @@ variable "container_registry" {
 
 variable "container_app_environment" {
   type = object({
-    zone_redundancy_enabled = bool
-    logs_destination        = string
-    target_subnet           = string
+    zone_redundancy_enabled        = bool
+    logs_destination               = string
+    target_subnet                  = string
+    internal_load_balancer_enabled = bool
     workload_profile = object({
       name                  = string
       workload_profile_type = string
@@ -443,9 +444,10 @@ variable "container_app_environment" {
     })
   })
   default = {
-    zone_redundancy_enabled = true
-    logs_destination        = "azure-monitor"
-    target_subnet           = "app"
+    zone_redundancy_enabled        = true
+    logs_destination               = "azure-monitor"
+    target_subnet                  = "app"
+    internal_load_balancer_enabled = true
     workload_profile = {
       name                  = "Consumption"
       workload_profile_type = "Consumption"

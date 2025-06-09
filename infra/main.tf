@@ -318,6 +318,7 @@ resource "azurerm_container_app_environment" "cae" {
   infrastructure_subnet_id                    = azurerm_subnet.subnet[var.container_app_environment.target_subnet].id
   logs_destination                            = var.container_app_environment.logs_destination
   dapr_application_insights_connection_string = azurerm_application_insights.appi.connection_string
+  internal_load_balancer_enabled              = var.container_app_environment.internal_load_balancer_enabled
 
   workload_profile {
     name                  = var.container_app_environment.workload_profile.name
