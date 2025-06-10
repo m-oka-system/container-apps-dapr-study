@@ -347,6 +347,16 @@ resource "azurerm_key_vault_certificate" "cert" {
 }
 
 # ------------------------------------------------------------------------------------------------------
+# Azure DNS Zone
+# ------------------------------------------------------------------------------------------------------
+resource "azurerm_dns_zone" "zone" {
+  name                = var.custom_domain_name
+  resource_group_name = azurerm_resource_group.rg.name
+
+  tags = local.tags
+}
+
+# ------------------------------------------------------------------------------------------------------
 # Container Registry
 # ------------------------------------------------------------------------------------------------------
 resource "azurerm_container_registry" "cr" {
