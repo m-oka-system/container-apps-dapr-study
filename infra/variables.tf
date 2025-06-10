@@ -10,6 +10,10 @@ variable "allowed_cidr" {
   type = list(string)
 }
 
+variable "custom_domain_name" {
+  type = string
+}
+
 variable "vnet" {
   type = object({
     address_space = list(string)
