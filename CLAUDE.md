@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+Always answer in Japanese.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
@@ -16,6 +18,7 @@ This is a full-stack microservices application demonstrating Azure Container App
 ## Development Commands
 
 ### Backend Development
+
 ```bash
 # Setup virtual environment and install dependencies
 cd src/backend
@@ -33,6 +36,7 @@ dapr run --app-id product-api --app-port 5002 --dapr-http-port 3500 --resources-
 ```
 
 ### Frontend Development
+
 ```bash
 # Install dependencies
 cd src/frontend
@@ -49,6 +53,7 @@ npm run lint
 ```
 
 ### Azure Deployment
+
 ```bash
 # Login to Azure
 azd auth login
@@ -69,6 +74,7 @@ azd down
 ```
 
 ### Docker Build Commands
+
 ```bash
 # Build images locally
 docker build -t frontend:latest src/frontend/
@@ -81,6 +87,7 @@ azd package
 ## Infrastructure Management
 
 The infrastructure is managed using Terraform with all configuration files located in the `/infra/` directory:
+
 - **main.tf**: Core infrastructure resources (Container Apps, VNet, Cosmos DB, etc.)
 - **variables.tf**: Input variable definitions
 - **outputs.tf**: Output values (URLs, resource IDs, etc.)
@@ -89,6 +96,7 @@ The infrastructure is managed using Terraform with all configuration files locat
 - **locals.tf**: Local values and computed variables
 
 ### Terraform Commands
+
 ```bash
 # Initialize Terraform
 cd infra
@@ -109,6 +117,7 @@ terraform destroy
 The application consists of two main services:
 
 1. **Backend API** (`/src/backend/`): Flask REST API providing CRUD operations for products, integrated with Dapr for state management (Cosmos DB) and secrets (Key Vault)
+
    - Endpoints: `/products` (GET, POST), `/products/<id>` (GET, PUT, DELETE), `/healthz`
 
 2. **Frontend** (`/src/frontend/`): Next.js application with Server Actions for backend communication
@@ -117,12 +126,14 @@ The application consists of two main services:
 ## Dapr Components
 
 The backend uses Dapr components (`/src/backend/components/`) for:
+
 - **State Store**: Cosmos DB abstraction with separate configs for local and Azure environments
 - **Secret Store**: Key Vault integration for production, local secrets.json for development
 
 ## CI/CD Workflows
 
 GitHub Actions workflows handle:
+
 - **terraform.yml**: Infrastructure deployment with Terraform
 - **frontend.yml**: Frontend deployment triggered on changes to `src/frontend/`
 - **backend.yml**: Backend deployment triggered on changes to `src/backend/`
