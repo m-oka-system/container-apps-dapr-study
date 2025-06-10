@@ -48,6 +48,13 @@ variable "subnet" {
         actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
       }
     }
+    agw = {
+      name                              = "agw"
+      address_prefixes                  = ["10.10.2.0/24"]
+      default_outbound_access_enabled   = false
+      private_endpoint_network_policies = "Disabled"
+      service_delegation                = null
+    }
   }
 }
 
@@ -64,6 +71,10 @@ variable "network_security_group" {
     app = {
       name          = "app"
       target_subnet = "app"
+    }
+    agw = {
+      name          = "agw"
+      target_subnet = "agw"
     }
   }
 }
@@ -154,6 +165,67 @@ variable "network_security_rule" {
       name                       = "DenyAllOutbound"
       priority                   = 4096
       direction                  = "Outbound"
+      access                     = "Deny"
+      protocol                   = "*"
+      source_port_range          = "*"
+      destination_port_range     = "*"
+      source_address_prefix      = "*"
+      destination_address_prefix = "*"
+    },
+    # Application Gateway Subnet
+    {
+      target_nsg                 = "agw"
+      name                       = "AllowGatewayManagerInbound"
+      priority                   = 1000
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "65200-65535"
+      source_address_prefix      = "GatewayManager"
+      destination_address_prefix = "*"
+    },
+    {
+      target_nsg                 = "agw"
+      name                       = "AllowAzureLoadBalancerInbound"
+      priority                   = 1100
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "*"
+      source_port_range          = "*"
+      destination_port_range     = "*"
+      source_address_prefix      = "AzureLoadBalancer"
+      destination_address_prefix = "*"
+    },
+    {
+      target_nsg                 = "agw"
+      name                       = "AllowHTTPSInbound"
+      priority                   = 1200
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "443"
+      source_address_prefix      = "*"
+      destination_address_prefix = "*"
+    },
+    {
+      target_nsg                 = "agw"
+      name                       = "AllowHTTPInbound"
+      priority                   = 1300
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "80"
+      source_address_prefix      = "*"
+      destination_address_prefix = "*"
+    },
+    {
+      target_nsg                 = "agw"
+      name                       = "DenyAllInbound"
+      priority                   = 4096
+      direction                  = "Inbound"
       access                     = "Deny"
       protocol                   = "*"
       source_port_range          = "*"
