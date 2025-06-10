@@ -35,7 +35,7 @@ locals {
         },
         {
           name  = "azureClientId"
-          value = try(azurerm_user_assigned_identity.id.client_id, "")
+          value = try(azurerm_user_assigned_identity.id["ca"].client_id, "")
         },
       ]
       secretStoreComponent = ""

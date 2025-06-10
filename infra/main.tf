@@ -277,7 +277,8 @@ resource "azurerm_private_endpoint" "pe" {
 # User Assigned Managed ID
 # ------------------------------------------------------------------------------------------------------
 resource "azurerm_user_assigned_identity" "id" {
-  name                = "id-${var.environment_name}"
+  for_each            = var.user_assigned_identity
+  name                = "id-${each.value.name}-${var.environment_name}"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
 
@@ -285,10 +286,10 @@ resource "azurerm_user_assigned_identity" "id" {
 }
 
 resource "azurerm_role_assignment" "role" {
-  for_each             = toset(var.role_assignment)
+  for_each             = var.role_assignment
   scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.rg.name}"
-  role_definition_name = each.value
-  principal_id         = azurerm_user_assigned_identity.id.principal_id
+  role_definition_name = each.value.role_definition_name
+  principal_id         = azurerm_user_assigned_identity.id[each.value.target_identity].principal_id
 }
 
 # ------------------------------------------------------------------------------------------------------
@@ -366,7 +367,7 @@ resource "azurerm_container_app" "ca" {
   identity {
     type = "UserAssigned"
     identity_ids = [
-      azurerm_user_assigned_identity.id.id
+      azurerm_user_assigned_identity.id["ca"].id
     ]
   }
 
@@ -433,7 +434,7 @@ resource "azurerm_container_app" "ca" {
     content {
       name                = "microsoft-provider-authentication-secret"
       key_vault_secret_id = azurerm_key_vault_secret.microsoft-provider-authentication-secret.id
-      identity            = azurerm_user_assigned_identity.id.id
+      identity            = azurerm_user_assigned_identity.id["ca"].id
     }
   }
 
@@ -448,7 +449,7 @@ resource "azurerm_container_app" "ca" {
 
   registry {
     server   = azurerm_container_registry.cr.login_server
-    identity = azurerm_user_assigned_identity.id.id
+    identity = azurerm_user_assigned_identity.id["ca"].id
   }
 
   lifecycle {

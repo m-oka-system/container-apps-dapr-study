@@ -407,12 +407,39 @@ variable "application_insights" {
   }
 }
 
+variable "user_assigned_identity" {
+  type = map(object({
+    name = string
+  }))
+  default = {
+    ca = {
+      name = "ca"
+    }
+    agw = {
+      name = "agw"
+    }
+  }
+}
+
 variable "role_assignment" {
-  type = list(string)
-  default = [
-    "AcrPull",
-    "Key Vault Secrets User",
-  ]
+  type = map(object({
+    target_identity      = string
+    role_definition_name = string
+  }))
+  default = {
+    ca_acr_pull = {
+      target_identity      = "ca"
+      role_definition_name = "AcrPull"
+    }
+    ca_key_vault_secrets_user = {
+      target_identity      = "ca"
+      role_definition_name = "Key Vault Secrets User"
+    }
+    agw_key_vault_secrets_user = {
+      target_identity      = "agw"
+      role_definition_name = "Key Vault Secrets User"
+    }
+  }
 }
 
 variable "container_registry" {
