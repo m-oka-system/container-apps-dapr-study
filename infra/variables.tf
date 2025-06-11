@@ -149,7 +149,19 @@ variable "network_security_rule" {
       protocol                   = "Tcp"
       source_port_range          = "*"
       destination_port_range     = "443"
-      source_address_prefix      = "10.10.1.0/24" # App Subnet のアドレスプレフィックスを想定
+      source_address_prefix      = "10.10.1.0/24"
+      destination_address_prefix = "*"
+    },
+    {
+      target_nsg                 = "pe"
+      name                       = "AllowAgwSubnetHTTPSInbound"
+      priority                   = 1100
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "443"
+      source_address_prefix      = "10.10.2.0/24"
       destination_address_prefix = "*"
     },
     {
