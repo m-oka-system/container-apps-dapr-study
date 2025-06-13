@@ -515,8 +515,8 @@ resource "azurerm_application_gateway" "agw" {
       http_listener_name         = "${request_routing_rule.value.name}-https-listener"
       backend_address_pool_name  = "${request_routing_rule.value.name}-backend-pool"
       backend_http_settings_name = "${request_routing_rule.value.name}-https-settings"
-      rewrite_rule_set_name      = local.rewrite_rule_set_name
-      priority                   = request_routing_rule.value.priority + 1
+      # rewrite_rule_set_name      = local.rewrite_rule_set_name
+      priority = request_routing_rule.value.priority + 1
     }
   }
 
@@ -542,19 +542,19 @@ resource "azurerm_application_gateway" "agw" {
   }
 
   # Rewrite rule set
-  rewrite_rule_set {
-    name = local.rewrite_rule_set_name
+  # rewrite_rule_set {
+  #   name = local.rewrite_rule_set_name
 
-    rewrite_rule {
-      name          = "override-x-forwarded-host"
-      rule_sequence = 100
+  #   rewrite_rule {
+  #     name          = "override-x-forwarded-host"
+  #     rule_sequence = 100
 
-      request_header_configuration {
-        header_name  = "X-Forwarded-Host"
-        header_value = var.custom_domain_name
-      }
-    }
-  }
+  #     request_header_configuration {
+  #       header_name  = "X-Forwarded-Host"
+  #       header_value = var.custom_domain_name
+  #     }
+  #   }
+  # }
 
   tags = local.tags
 }
