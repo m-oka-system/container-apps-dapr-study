@@ -841,7 +841,7 @@ resource "azuread_application_redirect_uris" "frontend" {
   application_id = azuread_application_registration.frontend.id
   type           = "Web"
   redirect_uris = [
-    "https://${azurerm_container_app.ca["frontend"].ingress[0].fqdn}/.auth/login/aad/callback"
+    "https://${var.custom_domain_name}/.auth/login/aad/callback"
   ]
 }
 
