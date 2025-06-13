@@ -351,10 +351,11 @@ variable "network_security_rule" {
 
 variable "key_vault" {
   type = object({
-    sku_name                   = string
-    enable_rbac_authorization  = bool
-    purge_protection_enabled   = bool
-    soft_delete_retention_days = number
+    sku_name                      = string
+    enable_rbac_authorization     = bool
+    purge_protection_enabled      = bool
+    soft_delete_retention_days    = number
+    public_network_access_enabled = bool
     network_acls = object({
       default_action             = string
       bypass                     = string
@@ -362,10 +363,11 @@ variable "key_vault" {
     })
   })
   default = {
-    sku_name                   = "standard"
-    enable_rbac_authorization  = true
-    purge_protection_enabled   = false
-    soft_delete_retention_days = 7
+    sku_name                      = "standard"
+    enable_rbac_authorization     = true
+    purge_protection_enabled      = false
+    soft_delete_retention_days    = 7
+    public_network_access_enabled = true
     network_acls = {
       default_action             = "Deny"
       bypass                     = "AzureServices"

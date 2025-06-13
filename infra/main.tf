@@ -90,15 +90,16 @@ resource "azurerm_subnet_network_security_group_association" "nsg_association" {
 # Azure Key Vault
 # ------------------------------------------------------------------------------------------------------
 resource "azurerm_key_vault" "kv" {
-  name                       = "kv-${var.environment_name}-${random_integer.num.result}"
-  location                   = azurerm_resource_group.rg.location
-  resource_group_name        = azurerm_resource_group.rg.name
-  sku_name                   = var.key_vault.sku_name
-  tenant_id                  = data.azurerm_client_config.current.tenant_id
-  enable_rbac_authorization  = var.key_vault.enable_rbac_authorization
-  purge_protection_enabled   = var.key_vault.purge_protection_enabled
-  soft_delete_retention_days = var.key_vault.soft_delete_retention_days
-  access_policy              = []
+  name                          = "kv-${var.environment_name}-${random_integer.num.result}"
+  location                      = azurerm_resource_group.rg.location
+  resource_group_name           = azurerm_resource_group.rg.name
+  sku_name                      = var.key_vault.sku_name
+  tenant_id                     = data.azurerm_client_config.current.tenant_id
+  enable_rbac_authorization     = var.key_vault.enable_rbac_authorization
+  purge_protection_enabled      = var.key_vault.purge_protection_enabled
+  soft_delete_retention_days    = var.key_vault.soft_delete_retention_days
+  public_network_access_enabled = var.key_vault.public_network_access_enabled
+  access_policy                 = []
 
   network_acls {
     default_action             = var.key_vault.network_acls.default_action
