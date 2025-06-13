@@ -532,6 +532,43 @@ variable "role_assignment" {
   }
 }
 
+variable "application_gateway" {
+  type = object({
+    enable_http2                      = bool
+    fips_enabled                      = bool
+    force_firewall_policy_association = bool
+    target_user_assigned_identity     = string
+    zones                             = list(string)
+    sku = object({
+      name     = string
+      tier     = string
+      capacity = number
+    })
+    public_ip = object({
+      sku               = string
+      allocation_method = string
+      zones             = list(string)
+    })
+  })
+  default = {
+    enable_http2                      = true
+    fips_enabled                      = false
+    force_firewall_policy_association = false
+    target_user_assigned_identity     = "agw"
+    zones                             = ["1", "2", "3"]
+    sku = {
+      name     = "Basic"
+      tier     = "Basic"
+      capacity = 1
+    }
+    public_ip = {
+      sku               = "Standard"
+      allocation_method = "Static"
+      zones             = ["1", "2", "3"]
+    }
+  }
+}
+
 variable "container_registry" {
   type = object({
     sku_name                      = string

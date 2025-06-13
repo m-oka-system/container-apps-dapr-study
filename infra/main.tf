@@ -358,6 +358,208 @@ resource "azurerm_dns_zone" "zone" {
 }
 
 # ------------------------------------------------------------------------------------------------------
+# Application Gateway
+# ------------------------------------------------------------------------------------------------------
+locals {
+  application_gateway_public_ip_name = "ip-agw-${var.environment_name}"
+  application_gateway_name           = "agw-${var.environment_name}"
+  frontend_ip_configuration_name     = "agw-feip-${var.environment_name}"
+  backend_address_pool_name          = "agw-bepool-${var.environment_name}"
+  backend_http_settings_name         = "agw-http-setting-${var.environment_name}"
+  http_listener_name                 = "agw-http-listener-${var.environment_name}"
+  https_listener_name                = "agw-https-listener-${var.environment_name}"
+  http_request_routing_rule_name     = "agw-http-rule-${var.environment_name}"
+  https_request_routing_rule_name    = "agw-https-rule-${var.environment_name}"
+  rewrite_rule_set_name              = "agw-rewrite-rule-set-${var.environment_name}"
+}
+
+resource "azurerm_public_ip" "agw_pip" {
+  name                = local.application_gateway_public_ip_name
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  sku                 = var.application_gateway.public_ip.sku
+  allocation_method   = var.application_gateway.public_ip.allocation_method
+  zones               = var.application_gateway.public_ip.zones
+
+  tags = local.tags
+}
+
+resource "azurerm_application_gateway" "agw" {
+  name                              = local.application_gateway_name
+  location                          = azurerm_resource_group.rg.location
+  resource_group_name               = azurerm_resource_group.rg.name
+  enable_http2                      = var.application_gateway.enable_http2
+  fips_enabled                      = var.application_gateway.fips_enabled
+  force_firewall_policy_association = var.application_gateway.force_firewall_policy_association
+  zones                             = var.application_gateway.zones
+
+  sku {
+    name     = var.application_gateway.sku.name
+    tier     = var.application_gateway.sku.tier
+    capacity = var.application_gateway.sku.capacity
+  }
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.id["agw"].id]
+  }
+
+  gateway_ip_configuration {
+    name      = "appGatewayIpConfig"
+    subnet_id = azurerm_subnet.subnet["agw"].id
+  }
+
+  frontend_ip_configuration {
+    name                 = local.frontend_ip_configuration_name
+    public_ip_address_id = azurerm_public_ip.agw_pip.id
+  }
+
+  frontend_port {
+    name = "http-port"
+    port = 80
+  }
+
+  frontend_port {
+    name = "https-port"
+    port = 443
+  }
+
+  # Backend address pools for each site
+  dynamic "backend_address_pool" {
+    for_each = local.application_gateway.sites
+    content {
+      name  = "${backend_address_pool.value.name}-backend-pool"
+      fqdns = [backend_address_pool.value.backend_fqdn]
+    }
+  }
+
+  # Backend HTTP settings for each site
+  dynamic "backend_http_settings" {
+    for_each = local.application_gateway.sites
+    content {
+      name                                = "${backend_http_settings.value.name}-https-settings"
+      cookie_based_affinity               = "Disabled"
+      port                                = 443
+      protocol                            = "Https"
+      request_timeout                     = 60
+      probe_name                          = "${backend_http_settings.value.name}-health-probe"
+      pick_host_name_from_backend_address = true
+
+      connection_draining {
+        enabled           = true
+        drain_timeout_sec = 60
+      }
+    }
+  }
+
+  # HTTP listeners for each site
+  dynamic "http_listener" {
+    for_each = local.application_gateway.sites
+    content {
+      name                           = "${http_listener.value.name}-http-listener"
+      frontend_ip_configuration_name = local.frontend_ip_configuration_name
+      frontend_port_name             = "http-port"
+      protocol                       = "Http"
+      host_name                      = http_listener.value.host_name
+    }
+  }
+
+  # HTTPS listeners for each site
+  dynamic "http_listener" {
+    for_each = local.application_gateway.sites
+    content {
+      name                           = "${http_listener.value.name}-https-listener"
+      frontend_ip_configuration_name = local.frontend_ip_configuration_name
+      frontend_port_name             = "https-port"
+      protocol                       = "Https"
+      ssl_certificate_name           = azurerm_key_vault_certificate.cert.name
+      host_name                      = http_listener.value.host_name
+    }
+  }
+
+  ssl_certificate {
+    name                = azurerm_key_vault_certificate.cert.name
+    key_vault_secret_id = azurerm_key_vault_certificate.cert.versionless_secret_id # シークレット識別子: https://{keyvault_name}.vault.azure.net/secretes/{certificate_name}/
+  }
+
+  # HTTP to HTTPS redirect rules for each site
+  dynamic "request_routing_rule" {
+    for_each = local.application_gateway.sites
+    content {
+      name                        = "${request_routing_rule.value.name}-http-to-https-redirect"
+      rule_type                   = "Basic"
+      http_listener_name          = "${request_routing_rule.value.name}-http-listener"
+      redirect_configuration_name = "${request_routing_rule.value.name}-http-to-https-redirect"
+      priority                    = request_routing_rule.value.priority
+    }
+  }
+
+  # Redirect configurations for each site
+  dynamic "redirect_configuration" {
+    for_each = local.application_gateway.sites
+    content {
+      name                 = "${redirect_configuration.value.name}-http-to-https-redirect"
+      redirect_type        = "Permanent"
+      target_listener_name = "${redirect_configuration.value.name}-https-listener"
+      include_path         = true
+      include_query_string = true
+    }
+  }
+
+  # HTTPS routing rules for each site
+  dynamic "request_routing_rule" {
+    for_each = local.application_gateway.sites
+    content {
+      name                       = "${request_routing_rule.value.name}-https-routing-rule"
+      rule_type                  = "Basic"
+      http_listener_name         = "${request_routing_rule.value.name}-https-listener"
+      backend_address_pool_name  = "${request_routing_rule.value.name}-backend-pool"
+      backend_http_settings_name = "${request_routing_rule.value.name}-https-settings"
+      rewrite_rule_set_name      = local.rewrite_rule_set_name
+      priority                   = request_routing_rule.value.priority + 1
+    }
+  }
+
+  # Health probes for each site
+  dynamic "probe" {
+    for_each = local.application_gateway.sites
+    content {
+      name                                      = "${probe.value.name}-health-probe"
+      protocol                                  = "Https"
+      path                                      = "/"
+      pick_host_name_from_backend_http_settings = true
+      interval                                  = 30
+      timeout                                   = 30
+      unhealthy_threshold                       = 3
+
+      match {
+        status_code = [
+          "200-399",
+          "401",
+        ]
+      }
+    }
+  }
+
+  # Rewrite rule set
+  rewrite_rule_set {
+    name = local.rewrite_rule_set_name
+
+    rewrite_rule {
+      name          = "override-x-forwarded-host"
+      rule_sequence = 100
+
+      request_header_configuration {
+        header_name  = "X-Forwarded-Host"
+        header_value = var.custom_domain_name
+      }
+    }
+  }
+
+  tags = local.tags
+}
+
+# ------------------------------------------------------------------------------------------------------
 # Container Registry
 # ------------------------------------------------------------------------------------------------------
 resource "azurerm_container_registry" "cr" {

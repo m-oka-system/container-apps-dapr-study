@@ -23,6 +23,18 @@ locals {
     }
   }
 
+  # Application Gateway
+  application_gateway = {
+    sites = [
+      {
+        name         = "frontend"
+        host_name    = var.custom_domain_name
+        backend_fqdn = azurerm_container_app.ca["frontend"].ingress[0].fqdn
+        priority     = 10
+      },
+    ]
+  }
+
   # Dapr コンポーネント
   dapr_components = {
     secret-store = {
