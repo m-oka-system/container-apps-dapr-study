@@ -480,7 +480,7 @@ resource "azurerm_container_app" "ca" {
     target_port                = each.value.ingress.target_port
 
     dynamic "ip_security_restriction" {
-      for_each = toset(var.allowed_cidr)
+      for_each = each.value.ingress.ip_security_restriction != null ? toset(var.allowed_cidr) : []
       content {
         name             = each.value.ingress.ip_security_restriction.name
         action           = each.value.ingress.ip_security_restriction.action

@@ -654,10 +654,7 @@ variable "container_app" {
         client_certificate_mode    = "ignore"
         transport                  = "auto"
         target_port                = 3000
-        ip_security_restriction = {
-          name   = "AllowMyIP"
-          action = "Allow"
-        }
+        ip_security_restriction    = null
         traffic_weight = {
           latest_revision = true
           percentage      = 100
@@ -696,10 +693,7 @@ variable "container_app" {
         client_certificate_mode    = "ignore"
         transport                  = "auto"
         target_port                = 5002
-        ip_security_restriction = {
-          name   = "AllowMyIP"
-          action = "Allow"
-        }
+        ip_security_restriction    = null
         traffic_weight = {
           latest_revision = true
           percentage      = 100
