@@ -350,9 +350,21 @@ resource "azurerm_key_vault_certificate" "cert" {
 # ------------------------------------------------------------------------------------------------------
 # Azure DNS Zone
 # ------------------------------------------------------------------------------------------------------
+locals {
+  dns_zone_rg_name = "rg-share"
+}
+
 data "azurerm_dns_zone" "zone" {
   name                = var.custom_domain_name
-  resource_group_name = "rg-share"
+  resource_group_name = local.dns_zone_rg_name
+}
+
+resource "azurerm_dns_a_record" "agw_pip" {
+  name                = "@"
+  zone_name           = data.azurerm_dns_zone.zone.name
+  resource_group_name = local.dns_zone_rg_name
+  ttl                 = 300
+  records             = [azurerm_public_ip.agw_pip.ip_address]
 }
 
 # ------------------------------------------------------------------------------------------------------
