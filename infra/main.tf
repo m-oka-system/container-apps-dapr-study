@@ -893,7 +893,9 @@ resource "azapi_resource" "frontend" {
       }
       httpSettings = {
         forwardProxy = {
-          convention = "NoProxy"
+          # https://learn.microsoft.com/ja-jp/azure/app-service/overview-app-gateway-integration#authentication
+          convention           = "Custom"
+          customHostHeaderName = "X-Original-Host"
         }
       }
       identityProviders = {
