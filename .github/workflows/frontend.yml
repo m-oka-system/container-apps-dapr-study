@@ -45,4 +45,6 @@ jobs:
         run: azd env select ${{ env.AZURE_ENV_NAME}}
 
       - name: Deploy Application
-        run: azd deploy frontend --no-prompt
+        run: |
+          export CUSTOM_DOMAIN_NAME="${{ secrets.CUSTOM_DOMAIN_NAME }}"
+          azd deploy frontend --no-prompt
