@@ -6,6 +6,8 @@ const nextConfig = {
       allowedOrigins: [
         process.env.CUSTOM_DOMAIN,
         `*.${process.env.CUSTOM_DOMAIN}`,
+        `${process.env.CUSTOM_DOMAIN}:443`,
+        `*.${process.env.CUSTOM_DOMAIN}:443`,
       ],
     },
   },
