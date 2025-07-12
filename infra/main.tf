@@ -848,9 +848,14 @@ resource "azuread_application_registration" "frontend" {
   implicit_id_token_issuance_enabled     = true # ID トークンの発行を有効化
 }
 
+# CI/CD を実行する Github Actions のアプリケーションオブジェクトを取得
+data "azuread_service_principal" "gha" {
+  display_name = "githubactions"
+}
+
 resource "azuread_application_owner" "frontend" {
   application_id  = azuread_application_registration.frontend.id
-  owner_object_id = data.azurerm_client_config.current.object_id
+  owner_object_id = data.azuread_service_principal.gha.object_id
 }
 
 resource "azuread_application_identifier_uri" "frontend" {
