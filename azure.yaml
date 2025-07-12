@@ -10,19 +10,17 @@ state:
 infra:
   provider: terraform
 services:
-  backend:
-    project: src/backend
-    host: containerapp
-    language: python
-    docker:
-      path: Dockerfile
-      remoteBuild: true
-  frontend:
-    project: src/frontend
-    host: containerapp
-    language: ts
-    docker:
-      path: Dockerfile
-      remoteBuild: true
-      buildArgs:
-        - CUSTOM_DOMAIN_NAME
+    backend:
+        project: src/backend
+        host: containerapp
+        language: python
+        docker:
+            path: Dockerfile
+            remoteBuild: true
+    frontend:
+        project: src/frontend
+        host: containerapp
+        language: ts
+        docker:
+            path: Dockerfile
+            remoteBuild: true
