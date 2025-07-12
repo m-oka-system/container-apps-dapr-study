@@ -653,6 +653,37 @@ resource "azapi_resource" "dapr_components" {
   }
 }
 
+# Container App Environment の DNS サフィックスと静的 IP アドレスを Private DNS Zone でマッピング
+resource "azurerm_private_dns_zone" "cae" {
+  name                = var.custom_domain_name
+  resource_group_name = azurerm_resource_group.rg.name
+
+  tags = local.tags
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "cae" {
+  name                  = "vnetlink"
+  resource_group_name   = azurerm_resource_group.rg.name
+  private_dns_zone_name = azurerm_private_dns_zone.cae.name
+  virtual_network_id    = azurerm_virtual_network.vnet.id
+}
+
+locals {
+  cae_a_records = {
+    apex_domain = "@",
+    wildcard    = "*",
+  }
+}
+
+resource "azurerm_private_dns_a_record" "cae" {
+  for_each            = local.cae_a_records
+  name                = each.value
+  zone_name           = azurerm_private_dns_zone.cae.name
+  resource_group_name = azurerm_resource_group.rg.name
+  ttl                 = 300
+  records             = [azurerm_container_app_environment.cae.static_ip_address]
+}
+
 # ------------------------------------------------------------------------------------------------------
 # Container App
 # ------------------------------------------------------------------------------------------------------
