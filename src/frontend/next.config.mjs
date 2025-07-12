@@ -4,10 +4,10 @@ const nextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins: [
-        process.env.CUSTOM_DOMAIN,
-        `*.${process.env.CUSTOM_DOMAIN}`,
-        `${process.env.CUSTOM_DOMAIN}:443`,
-        `*.${process.env.CUSTOM_DOMAIN}:443`,
+        process.env.CUSTOM_DOMAIN_NAME,
+        `*.${process.env.CUSTOM_DOMAIN_NAME}`,
+        `${process.env.CUSTOM_DOMAIN_NAME}:443`,
+        `*.${process.env.CUSTOM_DOMAIN_NAME}:443`,
       ],
     },
   },
