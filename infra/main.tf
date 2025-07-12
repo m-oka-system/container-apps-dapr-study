@@ -614,6 +614,21 @@ resource "azurerm_container_app_environment" "cae" {
   tags = local.tags
 }
 
+# ユーザー割り当てマネージド ID を割り当て (サポートされていないので azapi プロバイダーを使う)
+resource "azapi_update_resource" "cae_managed_identity" {
+  type        = "Microsoft.App/managedEnvironments@2025-01-01"
+  resource_id = azurerm_container_app_environment.cae.id
+
+  body = {
+    identity = {
+      type = "UserAssigned"
+      userAssignedIdentities = {
+        "${azurerm_user_assigned_identity.id["cae"].id}" = {}
+      }
+    }
+  }
+}
+
 # DNS サフィックス (サポートされていないので azapi プロバイダーを使う)
 resource "azapi_update_resource" "cae_custom_domain" {
   type        = "Microsoft.App/managedEnvironments@2025-01-01"
@@ -622,7 +637,7 @@ resource "azapi_update_resource" "cae_custom_domain" {
     properties = {
       customDomainConfiguration = {
         certificateKeyVaultProperties = {
-          identity    = azurerm_user_assigned_identity.id["ca"].id
+          identity    = azurerm_user_assigned_identity.id["cae"].id
           keyVaultUrl = data.azurerm_key_vault_certificate.wildcard.versionless_secret_id
         }
         dnsSuffix = var.custom_domain_name

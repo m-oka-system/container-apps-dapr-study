@@ -516,6 +516,9 @@ variable "user_assigned_identity" {
     ca = {
       name = "ca"
     }
+    cae = {
+      name = "cae"
+    }
     agw = {
       name = "agw"
     }
@@ -534,6 +537,10 @@ variable "role_assignment" {
     }
     ca_key_vault_secrets_user = {
       target_identity      = "ca"
+      role_definition_name = "Key Vault Secrets User"
+    }
+    ca_key_vault_secrets_user = {
+      target_identity      = "cae"
       role_definition_name = "Key Vault Secrets User"
     }
     agw_key_vault_secrets_user = {
