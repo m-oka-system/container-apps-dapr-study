@@ -59,6 +59,13 @@ variable "subnet" {
       private_endpoint_network_policies = "Disabled"
       service_delegation                = null
     }
+    vm = {
+      name                              = "vm"
+      address_prefixes                  = ["10.10.3.0/24"]
+      default_outbound_access_enabled   = false
+      private_endpoint_network_policies = "Disabled"
+      service_delegation                = null
+    }
   }
 }
 
@@ -79,6 +86,10 @@ variable "network_security_group" {
     agw = {
       name          = "agw"
       target_subnet = "agw"
+    }
+    vm = {
+      name          = "vm"
+      target_subnet = "vm"
     }
   }
 }
@@ -758,7 +769,7 @@ variable "nat_gateway" {
     })
   })
   default = {
-    target_subnets          = ["app"]
+    target_subnets          = ["app", "vm"]
     sku_name                = "Standard"
     idle_timeout_in_minutes = 4
     zones                   = ["1"]
