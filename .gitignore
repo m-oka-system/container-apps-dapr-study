@@ -40,3 +40,9 @@ docs/
 
 # Claude Code
 .claude/
+
+# SSL/TLS Certificates
+*.pem
+*.crt
+*.key
+*.pfx

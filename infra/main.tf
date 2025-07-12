@@ -296,6 +296,12 @@ resource "azurerm_role_assignment" "role" {
 # ------------------------------------------------------------------------------------------------------
 # Key Vault Certificate (Self-Signed)
 # ------------------------------------------------------------------------------------------------------
+# Let's Encrypt のワイルドカード証明書を Key Vault から取得する
+data "azurerm_key_vault_certificate" "wildcard" {
+  name         = "letsencrypt-wildcard-${replace(var.custom_domain_name, ".", "-")}"
+  key_vault_id = azurerm_key_vault.kv.id
+}
+
 resource "azurerm_key_vault_certificate" "cert" {
   name         = replace(var.custom_domain_name, ".", "-")
   key_vault_id = azurerm_key_vault.kv.id
@@ -360,7 +366,7 @@ data "azurerm_dns_zone" "zone" {
 }
 
 resource "azurerm_dns_a_record" "agw_pip" {
-  name                = "@"
+  name                = "www"
   zone_name           = data.azurerm_dns_zone.zone.name
   resource_group_name = local.dns_zone_rg_name
   ttl                 = 300
@@ -482,14 +488,14 @@ resource "azurerm_application_gateway" "agw" {
       frontend_ip_configuration_name = local.frontend_ip_configuration_name
       frontend_port_name             = "https-port"
       protocol                       = "Https"
-      ssl_certificate_name           = azurerm_key_vault_certificate.cert.name
+      ssl_certificate_name           = data.azurerm_key_vault_certificate.wildcard.name
       host_name                      = http_listener.value.host_name
     }
   }
 
   ssl_certificate {
-    name                = azurerm_key_vault_certificate.cert.name
-    key_vault_secret_id = azurerm_key_vault_certificate.cert.versionless_secret_id # シークレット識別子: https://{keyvault_name}.vault.azure.net/secretes/{certificate_name}/
+    name                = data.azurerm_key_vault_certificate.wildcard.name
+    key_vault_secret_id = data.azurerm_key_vault_certificate.wildcard.versionless_secret_id # シークレット識別子: https://{keyvault_name}.vault.azure.net/secretes/{certificate_name}/
   }
 
   # HTTP to HTTPS redirect rules for each site
@@ -606,6 +612,23 @@ resource "azurerm_container_app_environment" "cae" {
   }
 
   tags = local.tags
+}
+
+# DNS サフィックス (サポートされていないので azapi プロバイダーを使う)
+resource "azapi_update_resource" "cae_custom_domain" {
+  type        = "Microsoft.App/managedEnvironments@2025-01-01"
+  resource_id = azurerm_container_app_environment.cae.id
+  body = {
+    properties = {
+      customDomainConfiguration = {
+        certificateKeyVaultProperties = {
+          identity    = azurerm_user_assigned_identity.id["ca"].id
+          keyVaultUrl = data.azurerm_key_vault_certificate.wildcard.versionless_secret_id
+        }
+        dnsSuffix = var.custom_domain_name
+      }
+    }
+  }
 }
 
 # azurerm_container_app_environment_dapr_component では SecretRef が使えないので azapi プロバイダーを使う
@@ -851,7 +874,7 @@ resource "azuread_application_redirect_uris" "frontend" {
   application_id = azuread_application_registration.frontend.id
   type           = "Web"
   redirect_uris = [
-    "https://${var.custom_domain_name}/.auth/login/aad/callback"
+    "https://www.${var.custom_domain_name}/.auth/login/aad/callback"
   ]
 }
 

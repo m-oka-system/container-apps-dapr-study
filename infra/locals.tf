@@ -28,8 +28,8 @@ locals {
     sites = [
       {
         name         = "frontend"
-        host_name    = var.custom_domain_name
-        backend_fqdn = azurerm_container_app.ca["frontend"].ingress[0].fqdn
+        host_name    = "www.${var.custom_domain_name}"
+        backend_fqdn = "ca-frontend.${var.custom_domain_name}"
         priority     = 10
       },
     ]
