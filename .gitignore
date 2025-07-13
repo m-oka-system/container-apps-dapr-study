@@ -18,6 +18,11 @@ __pycache__/
 # Dapr - Local Secrets
 secrets.json
 
+# GitHub Copilot
+.github/chatmodes/
+.github/instructions/
+.github/prompts/
+
 # GitHub Actions
 .secrets
 .credential.json
