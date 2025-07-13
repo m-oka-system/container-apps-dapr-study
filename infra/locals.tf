@@ -28,7 +28,7 @@ locals {
     sites = [
       {
         name         = "frontend"
-        host_name    = "www.${var.custom_domain_name}"
+        host_name    = "${var.sub_domain_name}.${var.custom_domain_name}"
         backend_fqdn = "ca-frontend.${var.custom_domain_name}"
         priority     = 10
       },

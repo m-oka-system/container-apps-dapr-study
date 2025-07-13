@@ -366,7 +366,7 @@ data "azurerm_dns_zone" "zone" {
 }
 
 resource "azurerm_dns_a_record" "agw_pip" {
-  name                = "www"
+  name                = var.sub_domain_name
   zone_name           = data.azurerm_dns_zone.zone.name
   resource_group_name = local.dns_zone_rg_name
   ttl                 = 300
@@ -925,7 +925,7 @@ resource "azuread_application_redirect_uris" "frontend" {
   application_id = azuread_application_registration.frontend.id
   type           = "Web"
   redirect_uris = [
-    "https://www.${var.custom_domain_name}/.auth/login/aad/callback"
+    "https://${var.sub_domain_name}.${var.custom_domain_name}/.auth/login/aad/callback"
   ]
 }
 

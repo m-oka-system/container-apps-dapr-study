@@ -14,6 +14,11 @@ variable "custom_domain_name" {
   type = string
 }
 
+variable "sub_domain_name" {
+  type    = string
+  default = "www"
+}
+
 variable "vnet" {
   type = object({
     address_space = list(string)
