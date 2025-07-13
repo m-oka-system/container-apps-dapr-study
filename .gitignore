@@ -32,6 +32,7 @@ Thumbs.db
 
 # IDE - VSCode specific (optional)
 .vscode/
+!.vscode/mcp.json
 
 # Documentation
 docs/
