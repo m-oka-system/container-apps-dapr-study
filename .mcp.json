@@ -1,0 +1,64 @@
+// MCP configuration file for Claude Code.
+//
+// # Microsoft Learn Docs MCP Server
+// claude mcp add -s user --transport http microsoft.docs.mcp https://learn.microsoft.com/api/mcp
+//
+// # Context7
+// claude mcp add -s user context7 -- npx -y @upstash/context7-mcp@latest
+//
+// # Playwight
+// claude mcp add -s user playwright npx @playwright/mcp@latest
+//
+// # Terraform
+// claude mcp add -s user terraform -- docker run -i --rm hashicorp/terraform-mcp-server
+//
+// # GitHub
+// claude mcp add -s user --transport http github https://api.githubcopilot.com/mcp/
+//
+// # DeepWiki
+// claude mcp add -s user --transport http deepwiki https://mcp.deepwiki.com/sse
+//
+{
+  "mcpServers": {
+    "microsoft.docs.mcp": {
+      "type": "http",
+      "url": "https://learn.microsoft.com/api/mcp"
+    },
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp@latest"
+      ],
+      "env": {}
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "env": {}
+    },
+    "terraform": {
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "hashicorp/terraform-mcp-server"
+      ],
+      "env": {}
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "deepwiki": {
+      "type": "http",
+      "url": "https://mcp.deepwiki.com/sse"
+    }
+  }
+}
