@@ -544,7 +544,7 @@ variable "role_assignment" {
       target_identity      = "ca"
       role_definition_name = "Key Vault Secrets User"
     }
-    ca_key_vault_secrets_user = {
+    cae_key_vault_secrets_user = {
       target_identity      = "cae"
       role_definition_name = "Key Vault Secrets User"
     }
