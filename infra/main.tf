@@ -295,12 +295,40 @@ resource "azurerm_role_assignment" "role" {
 }
 
 # ------------------------------------------------------------------------------------------------------
-# Key Vault Certificate (Self-Signed)
+# Key Vault Certificate
 # ------------------------------------------------------------------------------------------------------
-# Let's Encrypt のワイルドカード証明書を Key Vault から取得する
-data "azurerm_key_vault_certificate" "wildcard" {
-  name         = "letsencrypt-wildcard-${replace(var.custom_domain_name, ".", "-")}"
+# Acmebot で作成したワイルドカード証明書を Key Vault にインポートする
+locals {
+  pfx_file_name = "wildcard-${replace(var.custom_domain_name, ".", "-")}"
+}
+
+resource "azurerm_key_vault_certificate" "wildcard" {
+  name         = local.pfx_file_name
   key_vault_id = azurerm_key_vault.kv.id
+
+  certificate {
+    contents = filebase64("${local.pfx_file_name}.pfx")
+    password = var.pfx_password
+  }
+}
+
+# ------------------------------------------------------------------------------------------------------
+# Acmebot: Automated ACME SSL/TLS certificates issuer for Azure Key Vault
+# https://github.com/shibayan/keyvault-acmebot
+# ------------------------------------------------------------------------------------------------------
+data "azurerm_resource_group" "acmebot" {
+  name = "rg-acmebot"
+}
+
+data "azurerm_windows_function_app" "acmbot" {
+  name                = "func-acmebot${random_integer.num.result}-gbyf"
+  resource_group_name = data.azurerm_resource_group.acmebot.name
+}
+
+resource "azurerm_role_assignment" "acmebot" {
+  scope                = data.azurerm_dns_zone.zone.id
+  role_definition_name = "DNS Zone Contributor"
+  principal_id         = data.azurerm_windows_function_app.acmbot.identity[0].principal_id
 }
 
 # ------------------------------------------------------------------------------------------------------
@@ -438,14 +466,14 @@ resource "azurerm_application_gateway" "agw" {
       frontend_ip_configuration_name = local.frontend_ip_configuration_name
       frontend_port_name             = "https-port"
       protocol                       = "Https"
-      ssl_certificate_name           = data.azurerm_key_vault_certificate.wildcard.name
+      ssl_certificate_name           = azurerm_key_vault_certificate.wildcard.name
       host_name                      = http_listener.value.host_name
     }
   }
 
   ssl_certificate {
-    name                = data.azurerm_key_vault_certificate.wildcard.name
-    key_vault_secret_id = data.azurerm_key_vault_certificate.wildcard.versionless_secret_id # シークレット識別子: https://{keyvault_name}.vault.azure.net/secretes/{certificate_name}/
+    name                = azurerm_key_vault_certificate.wildcard.name
+    key_vault_secret_id = azurerm_key_vault_certificate.wildcard.versionless_secret_id # シークレット識別子: https://{keyvault_name}.vault.azure.net/secretes/{certificate_name}/
   }
 
   # HTTP to HTTPS redirect rules for each site
@@ -588,7 +616,7 @@ resource "azapi_update_resource" "cae_custom_domain" {
       customDomainConfiguration = {
         certificateKeyVaultProperties = {
           identity    = azurerm_user_assigned_identity.id["cae"].id
-          keyVaultUrl = data.azurerm_key_vault_certificate.wildcard.versionless_secret_id
+          keyVaultUrl = azurerm_key_vault_certificate.wildcard.versionless_secret_id
         }
         dnsSuffix = var.custom_domain_name
       }
