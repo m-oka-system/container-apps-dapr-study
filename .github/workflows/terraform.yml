@@ -26,6 +26,8 @@ env:
   TF_VAR_location: ${{ vars.AZURE_LOCATION || 'japaneast' }}
   TF_VAR_allowed_cidr: ${{ secrets.ALLOWED_CIDR }}
   TF_VAR_custom_domain_name: ${{ secrets.CUSTOM_DOMAIN_NAME }}
+  TF_VAR_mail_address: ${{ secrets.MAIL_ADDRESS }}
+  TF_VAR_pfx_password: ${{ secrets.PFX_PASSWORD }}
 
 jobs:
   terraform:
