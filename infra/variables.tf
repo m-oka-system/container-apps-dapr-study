@@ -580,8 +580,8 @@ variable "application_gateway" {
     target_user_assigned_identity     = "agw"
     zones                             = ["1", "2", "3"]
     sku = {
-      name     = "Basic"
-      tier     = "Basic"
+      name     = "Standard_v2"
+      tier     = "Standard_v2"
       capacity = 1
     }
     public_ip = {
