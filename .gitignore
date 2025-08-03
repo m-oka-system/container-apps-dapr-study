@@ -51,6 +51,9 @@ docs/
 # Claude Code
 .claude/
 
+# Serena MCP
+.serena/
+
 # SSL/TLS Certificates
 *.pem
 *.crt
