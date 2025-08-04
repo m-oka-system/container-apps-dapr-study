@@ -19,14 +19,6 @@ variable "sub_domain_name" {
   default = "www"
 }
 
-variable "mail_address" {
-  type = string
-}
-
-variable "pfx_password" {
-  type = string
-}
-
 variable "vnet" {
   type = object({
     address_space = list(string)
