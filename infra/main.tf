@@ -23,6 +23,7 @@ resource "azurerm_virtual_network" "vnet" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   address_space       = var.vnet.address_space
+  dns_servers         = var.vnet.dns_servers
 
   tags = local.tags
 }
@@ -294,63 +295,31 @@ resource "azurerm_role_assignment" "role" {
 }
 
 # ------------------------------------------------------------------------------------------------------
-# Key Vault Certificate (Self-Signed)
+# Key Vault Certificate
 # ------------------------------------------------------------------------------------------------------
-# Let's Encrypt のワイルドカード証明書を Key Vault から取得する
+# Acmebot で作成したワイルドカード証明書を取得する
 data "azurerm_key_vault_certificate" "wildcard" {
-  name         = "letsencrypt-wildcard-${replace(var.custom_domain_name, ".", "-")}"
+  name         = "wildcard-${replace(var.custom_domain_name, ".", "-")}"
   key_vault_id = azurerm_key_vault.kv.id
 }
 
-resource "azurerm_key_vault_certificate" "cert" {
-  name         = replace(var.custom_domain_name, ".", "-")
-  key_vault_id = azurerm_key_vault.kv.id
+# ------------------------------------------------------------------------------------------------------
+# Acmebot: Automated ACME SSL/TLS certificates issuer for Azure Key Vault
+# https://github.com/shibayan/keyvault-acmebot
+# ------------------------------------------------------------------------------------------------------
+data "azurerm_resource_group" "acmebot" {
+  name = "rg-acmebot"
+}
 
-  certificate_policy {
-    issuer_parameters {
-      name = "Self"
-    }
+data "azurerm_windows_function_app" "acmbot" {
+  name                = "func-acmebot${random_integer.num.result}-gbyf"
+  resource_group_name = data.azurerm_resource_group.acmebot.name
+}
 
-    key_properties {
-      exportable = true
-      key_size   = 2048
-      key_type   = "RSA"
-      reuse_key  = false
-    }
-
-    lifetime_action {
-      action {
-        action_type = "AutoRenew"
-      }
-
-      trigger {
-        days_before_expiry = 30
-      }
-    }
-
-    secret_properties {
-      content_type = "application/x-pkcs12"
-    }
-
-    x509_certificate_properties {
-      extended_key_usage = [
-        "1.3.6.1.5.5.7.3.1",
-        "1.3.6.1.5.5.7.3.2",
-      ]
-      key_usage = [
-        "digitalSignature",
-        "keyEncipherment",
-      ]
-      subject            = "CN=${var.custom_domain_name}"
-      validity_in_months = 12
-
-      subject_alternative_names {
-        dns_names = [
-          var.custom_domain_name,
-        ]
-      }
-    }
-  }
+resource "azurerm_role_assignment" "acmebot" {
+  scope                = data.azurerm_dns_zone.zone.id
+  role_definition_name = "DNS Zone Contributor"
+  principal_id         = data.azurerm_windows_function_app.acmbot.identity[0].principal_id
 }
 
 # ------------------------------------------------------------------------------------------------------
@@ -416,8 +385,10 @@ resource "azurerm_application_gateway" "agw" {
   }
 
   identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.id["agw"].id]
+    type = "UserAssigned"
+    identity_ids = [
+      azurerm_user_assigned_identity.id["agw"].id
+    ]
   }
 
   gateway_ip_configuration {
@@ -611,22 +582,14 @@ resource "azurerm_container_app_environment" "cae" {
     maximum_count         = var.container_app_environment.workload_profile.maximum_count
   }
 
-  tags = local.tags
-}
-
-# ユーザー割り当てマネージド ID を割り当て (サポートされていないので azapi プロバイダーを使う)
-resource "azapi_update_resource" "cae_managed_identity" {
-  type        = "Microsoft.App/managedEnvironments@2025-01-01"
-  resource_id = azurerm_container_app_environment.cae.id
-
-  body = {
-    identity = {
-      type = "UserAssigned"
-      userAssignedIdentities = {
-        "${azurerm_user_assigned_identity.id["cae"].id}" = {}
-      }
-    }
+  identity {
+    type = "UserAssigned"
+    identity_ids = [
+      azurerm_user_assigned_identity.id["cae"].id
+    ]
   }
+
+  tags = local.tags
 }
 
 # DNS サフィックス (サポートされていないので azapi プロバイダーを使う)

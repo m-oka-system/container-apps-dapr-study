@@ -22,9 +22,11 @@ variable "sub_domain_name" {
 variable "vnet" {
   type = object({
     address_space = list(string)
+    dns_servers   = list(string)
   })
   default = {
     address_space = ["10.10.0.0/16"]
+    dns_servers   = ["10.20.4.5"] # 既定の DNS を使用する場合は空のリストを指定
   }
 }
 
@@ -62,7 +64,10 @@ variable "subnet" {
       address_prefixes                  = ["10.10.2.0/24"]
       default_outbound_access_enabled   = false
       private_endpoint_network_policies = "Disabled"
-      service_delegation                = null
+      service_delegation = {
+        name    = "Microsoft.Network/applicationGateways"
+        actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+      }
     }
     vm = {
       name                              = "vm"
