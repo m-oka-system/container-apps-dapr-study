@@ -385,8 +385,10 @@ resource "azurerm_application_gateway" "agw" {
   }
 
   identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.id["agw"].id]
+    type = "UserAssigned"
+    identity_ids = [
+      azurerm_user_assigned_identity.id["agw"].id
+    ]
   }
 
   gateway_ip_configuration {
@@ -580,22 +582,14 @@ resource "azurerm_container_app_environment" "cae" {
     maximum_count         = var.container_app_environment.workload_profile.maximum_count
   }
 
-  tags = local.tags
-}
-
-# ユーザー割り当てマネージド ID を割り当て (サポートされていないので azapi プロバイダーを使う)
-resource "azapi_update_resource" "cae_managed_identity" {
-  type        = "Microsoft.App/managedEnvironments@2025-01-01"
-  resource_id = azurerm_container_app_environment.cae.id
-
-  body = {
-    identity = {
-      type = "UserAssigned"
-      userAssignedIdentities = {
-        "${azurerm_user_assigned_identity.id["cae"].id}" = {}
-      }
-    }
+  identity {
+    type = "UserAssigned"
+    identity_ids = [
+      azurerm_user_assigned_identity.id["cae"].id
+    ]
   }
+
+  tags = local.tags
 }
 
 # DNS サフィックス (サポートされていないので azapi プロバイダーを使う)
