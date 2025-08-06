@@ -692,7 +692,7 @@ variable "container_app" {
       name          = "frontend"
       revision_mode = "Single"
       template = {
-        min_replicas = 1
+        min_replicas = 0
         max_replicas = 10
         container = {
           name   = "frontend"
@@ -731,7 +731,7 @@ variable "container_app" {
       name          = "backend"
       revision_mode = "Single"
       template = {
-        min_replicas = 1
+        min_replicas = 0
         max_replicas = 10
         container = {
           name   = "backend"
