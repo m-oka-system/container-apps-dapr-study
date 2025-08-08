@@ -6,6 +6,15 @@ const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5002';
 const API_PRODUCTS_PATH = process.env.API_PRODUCTS_PATH || 'products';
 const API_SECRET_KEY = process.env.API_SECRET_KEY;
 
+// Product IDのサニタイズ関数
+function sanitizeProductId(id: string): string {
+  // 例: 英数字、ハイフン、アンダースコアのみ許可（必要に応じてUUIDや数値のみなどに変更）
+  if (/^[a-zA-Z0-9_-]+$/.test(id)) {
+    return id;
+  }
+  throw new Error('不正な商品IDです');
+}
+
 // 共通のヘッダー設定
 const getApiHeaders = () => {
   const headers: Record<string, string> = {
@@ -144,10 +153,20 @@ export async function updateProduct(id: string, product: { name: string; price: 
       };
     }
 
-    const response = await fetch(`${API_BASE_URL}/${API_PRODUCTS_PATH}/${id}`, {
+    let safeId: string;
+    try {
+      safeId = sanitizeProductId(id);
+    } catch (e) {
+      return {
+        success: false,
+        error: e instanceof Error ? e.message : '不正な商品IDです'
+      };
+    }
+
+    const response = await fetch(`${API_BASE_URL}/${API_PRODUCTS_PATH}/${safeId}`, {
       method: 'PUT',
       headers: getApiHeaders(),
-      body: JSON.stringify({ ...product, id }),
+      body: JSON.stringify({ ...product, id: safeId }),
     });
 
     if (!response.ok) {
@@ -179,7 +198,17 @@ export async function updateProduct(id: string, product: { name: string; price: 
 // 商品削除
 export async function deleteProduct(id: string): Promise<ActionResult<void>> {
   try {
-    const response = await fetch(`${API_BASE_URL}/${API_PRODUCTS_PATH}/${id}`, {
+    let safeId: string;
+    try {
+      safeId = sanitizeProductId(id);
+    } catch (e) {
+      return {
+        success: false,
+        error: e instanceof Error ? e.message : '不正な商品IDです'
+      };
+    }
+
+    const response = await fetch(`${API_BASE_URL}/${API_PRODUCTS_PATH}/${safeId}`, {
       method: 'DELETE',
       headers: getApiHeaders(),
     });
