@@ -26,7 +26,7 @@ variable "vnet" {
   })
   default = {
     address_space = ["10.10.0.0/16"]
-    dns_servers   = ["10.20.4.5"] # 既定の DNS を使用する場合は空のリストを指定
+    dns_servers   = [] # 既定の DNS を使用する場合は空のリストを指定
   }
 }
 
