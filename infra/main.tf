@@ -349,13 +349,7 @@ locals {
   application_gateway_public_ip_name = "ip-agw-${var.environment_name}"
   application_gateway_name           = "agw-${var.environment_name}"
   frontend_ip_configuration_name     = "agw-feip-${var.environment_name}"
-  backend_address_pool_name          = "agw-bepool-${var.environment_name}"
-  backend_http_settings_name         = "agw-http-setting-${var.environment_name}"
-  http_listener_name                 = "agw-http-listener-${var.environment_name}"
-  https_listener_name                = "agw-https-listener-${var.environment_name}"
-  http_request_routing_rule_name     = "agw-http-rule-${var.environment_name}"
-  https_request_routing_rule_name    = "agw-https-rule-${var.environment_name}"
-  rewrite_rule_set_name              = "agw-rewrite-rule-set-${var.environment_name}"
+  # rewrite_rule_set_name              = "agw-rewrite-rule-set-${var.environment_name}"
 }
 
 resource "azurerm_public_ip" "agw_pip" {
