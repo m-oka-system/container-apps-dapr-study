@@ -136,6 +136,13 @@ export async function createProductFromObject(product: { name: string; price: nu
 // 商品更新
 export async function updateProduct(id: string, product: { name: string; price: number }): Promise<ActionResult<Product>> {
   try {
+    // idのバリデーション（英数字とハイフンのみ許可、長さ1-64）
+    if (!/^[a-zA-Z0-9\-]{1,64}$/.test(id)) {
+      return {
+        success: false,
+        error: '不正な商品IDです。'
+      };
+    }
     // バリデーション
     if (!product.name || !product.price || product.price <= 0) {
       return {
@@ -179,6 +186,13 @@ export async function updateProduct(id: string, product: { name: string; price: 
 // 商品削除
 export async function deleteProduct(id: string): Promise<ActionResult<void>> {
   try {
+    // idのバリデーション（英数字とハイフンのみ許可、長さ1-64）
+    if (!/^[a-zA-Z0-9\-]{1,64}$/.test(id)) {
+      return {
+        success: false,
+        error: '不正な商品IDです。'
+      };
+    }
     const response = await fetch(`${API_BASE_URL}/${API_PRODUCTS_PATH}/${id}`, {
       method: 'DELETE',
       headers: getApiHeaders(),
