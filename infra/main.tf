@@ -96,7 +96,7 @@ resource "azurerm_key_vault" "kv" {
   resource_group_name           = azurerm_resource_group.rg.name
   sku_name                      = var.key_vault.sku_name
   tenant_id                     = data.azurerm_client_config.current.tenant_id
-  enable_rbac_authorization     = var.key_vault.enable_rbac_authorization
+  rbac_authorization_enabled    = var.key_vault.rbac_authorization_enabled
   purge_protection_enabled      = var.key_vault.purge_protection_enabled
   soft_delete_retention_days    = var.key_vault.soft_delete_retention_days
   public_network_access_enabled = var.key_vault.public_network_access_enabled
