@@ -36,7 +36,8 @@ variable "github_repo" {
 }
 
 variable "github_app_private_key_file" {
-  type = string
+  type    = string
+  default = "github-app-private-key.pem"
 }
 
 variable "github_app_private_key" {
