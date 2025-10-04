@@ -19,6 +19,31 @@ variable "sub_domain_name" {
   default = "www"
 }
 
+variable "github_app_id" {
+  type = string
+}
+
+variable "github_app_installation_id" {
+  type = string
+}
+
+variable "github_owner" {
+  type = string
+}
+
+variable "github_repo" {
+  type = string
+}
+
+variable "github_app_private_key_file" {
+  type = string
+}
+
+variable "github_app_private_key" {
+  type      = string
+  sensitive = true
+}
+
 variable "vnet" {
   type = object({
     address_space = list(string)

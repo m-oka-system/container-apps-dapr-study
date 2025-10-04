@@ -963,3 +963,105 @@ resource "azapi_resource" "frontend" {
     }
   }
 }
+
+# ------------------------------------------------------------------------------------------------------
+# Container App Job (GitHub Actions Self-Hosted Runner)
+# ------------------------------------------------------------------------------------------------------
+# 参考 URL
+# https://learn.microsoft.com/ja-jp/azure/container-apps/tutorial-ci-cd-runners-jobs
+# https://azure.github.io/jpazpaas/2024/07/30/How-to-use-GithubApp-for-self-hosted-runner-on-ContainerApps-Job.html
+# https://zenn.dev/yutakaosada/articles/6ce1577a84db2d
+
+resource "azurerm_key_vault_secret" "container-app-job-private-key" {
+  name = "container-app-job-private-key"
+  # Private Key ファイルが指定されていればそれを使い、指定されていなければ直接秘密値を使う
+  value        = try(filebase64("${path.module}/${var.github_app_private_key_file}"), var.github_app_private_key)
+  key_vault_id = azurerm_key_vault.kv.id
+  content_type = "text/plain"
+}
+
+resource "azurerm_container_app_job" "gha" {
+  name                         = "gha-runner-${var.environment_name}"
+  resource_group_name          = azurerm_resource_group.rg.name
+  location                     = azurerm_resource_group.rg.location
+  container_app_environment_id = azurerm_container_app_environment.cae.id
+  workload_profile_name        = one(azurerm_container_app_environment.cae.workload_profile).name
+
+
+  replica_timeout_in_seconds = 1800
+  replica_retry_limit        = 0
+
+  event_trigger_config {
+    parallelism              = 1
+    replica_completion_count = 1
+
+    scale {
+      min_executions              = 0
+      max_executions              = 10
+      polling_interval_in_seconds = 30
+
+      rules {
+        name             = "github-runner"
+        custom_rule_type = "github-runner"
+        metadata = {
+          "githubAPIURL"              = "https://api.github.com"
+          "owner"                     = var.github_owner
+          "runnerScope"               = "repo"
+          "repos"                     = var.github_repo
+          "targetWorkflowQueueLength" = "1"
+          "applicationID"             = var.github_app_id
+          "installationID"            = var.github_app_installation_id
+        }
+        authentication {
+          secret_name       = "container-app-job-private-key"
+          trigger_parameter = "appKey"
+        }
+      }
+    }
+  }
+
+  identity {
+    type = "UserAssigned"
+    identity_ids = [
+      azurerm_user_assigned_identity.id["ca"].id
+    ]
+  }
+
+  template {
+    container {
+      name = "gha-runner"
+      # Initial container image (overwritten by CI/CD)
+      image  = "mcr.microsoft.com/k8se/quickstart:latest"
+      cpu    = "2.0"
+      memory = "4Gi"
+
+
+      dynamic "env" {
+        for_each = local.container_app_job_env
+        content {
+          name  = env.key
+          value = env.value
+        }
+      }
+    }
+  }
+
+  secret {
+    name                = "container-app-job-private-key"
+    key_vault_secret_id = azurerm_key_vault_secret.container-app-job-private-key.id
+    identity            = azurerm_user_assigned_identity.id["ca"].id
+  }
+
+  registry {
+    server   = azurerm_container_registry.cr.login_server
+    identity = azurerm_user_assigned_identity.id["ca"].id
+  }
+
+  lifecycle {
+    ignore_changes = [
+      template[0].container[0].image,
+    ]
+  }
+
+  tags = local.tags
+}
