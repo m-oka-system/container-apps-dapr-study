@@ -1048,7 +1048,7 @@ resource "azurerm_container_app_job" "gha" {
 
   secret {
     name                = "github-app-private-key"
-    key_vault_secret_id = azurerm_key_vault_secret.container-app-job-private-key.id
+    key_vault_secret_id = azurerm_key_vault_secret.github-app-private-key.versionless_id
     identity            = azurerm_user_assigned_identity.id["ca"].id
   }
 
