@@ -975,7 +975,7 @@ resource "azapi_resource" "frontend" {
 resource "azurerm_key_vault_secret" "container-app-job-private-key" {
   name = "container-app-job-private-key"
   # Private Key ファイルが指定されていればそれを使い、指定されていなければ直接秘密値を使う
-  value        = try(filebase64("${path.module}/${var.github_app_private_key_file}"), var.github_app_private_key)
+  value        = try(file("${path.module}/${var.github_app_private_key_file}"), var.github_app_private_key)
   key_vault_id = azurerm_key_vault.kv.id
   content_type = "text/plain"
 }
