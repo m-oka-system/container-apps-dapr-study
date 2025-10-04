@@ -972,8 +972,8 @@ resource "azapi_resource" "frontend" {
 # https://azure.github.io/jpazpaas/2024/07/30/How-to-use-GithubApp-for-self-hosted-runner-on-ContainerApps-Job.html
 # https://zenn.dev/yutakaosada/articles/6ce1577a84db2d
 
-resource "azurerm_key_vault_secret" "container-app-job-private-key" {
-  name = "container-app-job-private-key"
+resource "azurerm_key_vault_secret" "github-app-private-key" {
+  name = "github-app-private-key"
   # Private Key ファイルが指定されていればそれを使い、指定されていなければ直接秘密値を使う
   value        = try(file("${path.module}/${var.github_app_private_key_file}"), var.github_app_private_key)
   key_vault_id = azurerm_key_vault.kv.id
@@ -1013,7 +1013,7 @@ resource "azurerm_container_app_job" "gha" {
           "installationID"            = var.github_app_installation_id
         }
         authentication {
-          secret_name       = "container-app-job-private-key"
+          secret_name       = "github-app-private-key"
           trigger_parameter = "appKey"
         }
       }
@@ -1047,7 +1047,7 @@ resource "azurerm_container_app_job" "gha" {
   }
 
   secret {
-    name                = "container-app-job-private-key"
+    name                = "github-app-private-key"
     key_vault_secret_id = azurerm_key_vault_secret.container-app-job-private-key.id
     identity            = azurerm_user_assigned_identity.id["ca"].id
   }
