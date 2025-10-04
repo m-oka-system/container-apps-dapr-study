@@ -382,6 +382,18 @@ variable "network_security_rule" {
     },
     {
       target_nsg                 = "app"
+      name                       = "AllowInternetHTTPSOutbound"
+      priority                   = 1700
+      direction                  = "Outbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "443"
+      source_address_prefix      = "*"
+      destination_address_prefix = "Internet"
+    },
+    {
+      target_nsg                 = "app"
       name                       = "DenyAllOutbound"
       priority                   = 4096
       direction                  = "Outbound"
