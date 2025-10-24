@@ -2,18 +2,18 @@ name: Provision Infrastructure with Terraform (Self-Hosted Runner)
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "infra/**"
-      - ".github/workflows/terraform-self-hosted.yml"
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "infra/**"
-      - ".github/workflows/terraform-self-hosted.yml"
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - "infra/**"
+  #     - ".github/workflows/terraform-self-hosted.yml"
+  # pull_request:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - "infra/**"
+  #     - ".github/workflows/terraform-self-hosted.yml"
 
 defaults:
   run:
