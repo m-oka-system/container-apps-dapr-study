@@ -7,13 +7,13 @@ on:
       - main
     paths:
       - "infra/**"
-      - ".github/workflows/terraform.yml"
+      - ".github/workflows/terraform-self-hosted.yml"
   pull_request:
     branches:
       - main
     paths:
       - "infra/**"
-      - ".github/workflows/terraform.yml"
+      - ".github/workflows/terraform-self-hosted.yml"
 
 defaults:
   run:
