@@ -90,4 +90,12 @@ locals {
     backend = {
     }
   }
+
+  # Container App Job
+  container_app_job_env = {
+    PEM_KEY       = "github-app-private-key"
+    GITHUB_APP_ID = var.github_app_id
+    GITHUB_OWNER  = var.github_owner
+    GITHUB_REPO   = var.github_repo
+  }
 }

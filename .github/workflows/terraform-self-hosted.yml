@@ -1,4 +1,4 @@
-name: Provision Infrastructure with Terraform
+name: Provision Infrastructure with Terraform (Self-Hosted Runner)
 
 on:
   workflow_dispatch:
@@ -7,13 +7,13 @@ on:
   #     - main
   #   paths:
   #     - "infra/**"
-  #     - ".github/workflows/terraform.yml"
+  #     - ".github/workflows/terraform-self-hosted.yml"
   # pull_request:
   #   branches:
   #     - main
   #   paths:
   #     - "infra/**"
-  #     - ".github/workflows/terraform.yml"
+  #     - ".github/workflows/terraform-self-hosted.yml"
 
 defaults:
   run:
@@ -28,16 +28,21 @@ permissions:
   contents: read
 
 env:
-  AZCLI_VERSION: ${{ vars.AZCLI_VERSION || '2.72.0' }}
-  TF_VERSION: ${{ vars.TF_VERSION || '1.11.2' }}
+  NODE_VERSION: ${{ vars.NODE_VERSION || '20.x' }}
+  TF_VERSION: ${{ vars.TF_VERSION || '1.13.3' }}
   TF_VAR_environment_name: ${{ vars.AZURE_ENV_NAME }}
   TF_VAR_location: ${{ vars.AZURE_LOCATION || 'japaneast' }}
   TF_VAR_allowed_cidr: ${{ secrets.ALLOWED_CIDR }}
   TF_VAR_custom_domain_name: ${{ secrets.CUSTOM_DOMAIN_NAME }}
+  TF_VAR_github_app_private_key: ${{ secrets.APP_PRIVATE_KEY }}
+  TF_VAR_github_app_id: ${{ secrets.APP_ID }}
+  TF_VAR_github_app_installation_id: ${{ secrets.APP_INSTALLATION_ID }}
+  TF_VAR_github_owner: ${{ secrets.OWNER }}
+  TF_VAR_github_repo: ${{ secrets.REPO }}
 
 jobs:
   terraform:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 10
     environment:
       name: dev
@@ -56,28 +61,10 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Get runner's Public IP
-        id: runner-ip
-        uses: haythem/public-ip@v1.3
-
-      - name: Check if KeyVault exists
-        id: check_if_keyvault_exists
-        continue-on-error: true
-        uses: azure/cli@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
         with:
-          azcliversion: ${{ env.AZCLI_VERSION }}
-          inlineScript: |
-            az keyvault show --name ${{ secrets.KEY_VAULT_NAME }} --query "name" --output tsv
-
-      - name: Add runner's Public IP to KeyVault Firewall
-        if: steps.check_if_keyvault_exists.outcome == 'success'
-        uses: azure/cli@v2
-        with:
-          azcliversion: ${{ env.AZCLI_VERSION }}
-          inlineScript: |
-            az keyvault network-rule add \
-              --name ${{ secrets.KEY_VAULT_NAME }} \
-              --ip-address ${{ steps.runner-ip.outputs.ipv4 }}
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -122,13 +109,3 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_USE_OIDC: true
-
-      - name: Remove runner's Public IP from KeyVault Firewall
-        if: steps.check_if_keyvault_exists.outcome == 'success'
-        uses: azure/cli@v2
-        with:
-          azcliversion: ${{ env.AZCLI_VERSION }}
-          inlineScript: |
-            az keyvault network-rule remove \
-              --name ${{ secrets.KEY_VAULT_NAME }} \
-              --ip-address ${{ steps.runner-ip.outputs.ipv4 }}

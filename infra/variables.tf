@@ -19,6 +19,32 @@ variable "sub_domain_name" {
   default = "www"
 }
 
+variable "github_app_id" {
+  type = string
+}
+
+variable "github_app_installation_id" {
+  type = string
+}
+
+variable "github_owner" {
+  type = string
+}
+
+variable "github_repo" {
+  type = string
+}
+
+variable "github_app_private_key_file" {
+  type    = string
+  default = "github-app-private-key.pem"
+}
+
+variable "github_app_private_key" {
+  type      = string
+  sensitive = true
+}
+
 variable "vnet" {
   type = object({
     address_space = list(string)
@@ -357,6 +383,18 @@ variable "network_security_rule" {
     },
     {
       target_nsg                 = "app"
+      name                       = "AllowInternetHTTPSOutbound"
+      priority                   = 1700
+      direction                  = "Outbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "443"
+      source_address_prefix      = "*"
+      destination_address_prefix = "Internet"
+    },
+    {
+      target_nsg                 = "app"
       name                       = "DenyAllOutbound"
       priority                   = 4096
       direction                  = "Outbound"
@@ -373,7 +411,7 @@ variable "network_security_rule" {
 variable "key_vault" {
   type = object({
     sku_name                      = string
-    enable_rbac_authorization     = bool
+    rbac_authorization_enabled    = bool
     purge_protection_enabled      = bool
     soft_delete_retention_days    = number
     public_network_access_enabled = bool
@@ -385,7 +423,7 @@ variable "key_vault" {
   })
   default = {
     sku_name                      = "standard"
-    enable_rbac_authorization     = true
+    rbac_authorization_enabled    = true
     purge_protection_enabled      = false
     soft_delete_retention_days    = 7
     public_network_access_enabled = true
